@@ -1,4 +1,4 @@
-import { drawCharacter } from './character.js?v=0.3.0';
+import { drawCharacter } from './character.js?v=0.4.0';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {
@@ -7,9 +7,10 @@ export const CAST = {
     appearance: { skin: 2, hair: 4, colour: 1, hairStyle: 1, outfit: 1, accessory: 2, gender: 1 },
   },
   mira: {
-    name: 'Mira', label: 'Mira · village tailor', x: 402, y: 222,
+    name: 'Mira', label: 'Mira · village tailor', x: 402, y: 236,
     appearance: { skin: 3, hair: 3, colour: 3, hairStyle: 6, outfit: 4, accessory: 4, gender: 0 },
   },
+  guardian: { name: 'Briarwood’s guardian', label: 'Briarwood’s guardian' },
   dragon: { name: 'the dreamer', label: 'The dream beneath the hill' },
 };
 

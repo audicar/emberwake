@@ -1,5 +1,10 @@
-import { PALETTES } from './core.js';
+import { PALETTES } from './core.js?v=0.4.0';
 
+function mix(hex, colour, amount) {
+  const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
+  const b=colour.slice(1).match(/../g).map(v=>parseInt(v,16));
+  return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*amount)).join(',')})`;
+}
 function tint(hex, amount) {
   const rgb = hex.slice(1).match(/../g).map(v => parseInt(v, 16));
   return `rgb(${rgb.map(v => Math.round(amount > 0 ? v + (255 - v) * amount : v * (1 + amount))).join(',')})`;
@@ -10,8 +15,10 @@ function tint(hex, amount) {
 export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 1) {
   const skin = PALETTES.skin[a.skin], hair = PALETTES.hair[a.hair], cloth = PALETTES.colour[a.colour];
   const ink = '#3b3542', cream = '#fff0d5', boot = '#795b56';
-  const hairDark = tint(hair, -.28), hairLight = tint(hair, .21), hairShine = tint(hair, .35);
+  const hairDark = tint(hair, -.20), hairLight = tint(hair, .18), hairShine = tint(hair, .27);
   const shadow = tint(skin, -.15), light = tint(skin, .13), clothDark = tint(cloth, -.24), clothLight = tint(cloth, .22);
+  const faceShade = mix(skin, '#a16f70', .08), faceLight = tint(skin, .06);
+  const cheek = mix(skin, '#d47e89', .19), lip = mix(skin, '#a65f6d', .36);
   const female = a.gender !== 1, back = direction === 'up', side = direction === 'left' || direction === 'right';
   const style = a.hairStyle, outfit = a.outfit;
   const stride = step ? Math.round(Math.sin(step) * 2) : 0;
@@ -110,18 +117,20 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     r(-3,-24,6,5,shadow); r(-2,-23,4,4,skin);
     r(-9,-28,2,5,shadow); r(7,-28,2,5,shadow);
   } else {
-    // Rounded face, warm shadows, ear highlights and a light on each eye.
-    r(-6,-35,12,2,shadow);r(-8,-33,16,12,shadow);r(-6,-21,12,2,shadow);r(-4,-19,8,1,shadow);
-    r(-7,-33,14,11,skin);r(-5,-34,10,13,skin);r(-3,-22,6,3,skin);r(-6,-32,9,7,light);
-    r(-9,-28,2,5,shadow);r(7,-28,2,5,shadow);r(-9,-27,1,2,skin);r(8,-27,1,2,skin);
-    if (!back) {
-      if (side) {
-        r(3,-28,3,4,ink);r(3,-28,1,2,'#fffaec');r(4,-25,1,1,'#ad8880');r(7,-25,2,2,skin);r(5,-22,2,1,'#b67a70');r(1,-23,3,2,tint(skin,-.1));
-        if(female)r(5,-29,2,1,ink);
-      } else {
-        for(const eye of [-6,3]){r(eye,-28,3,4,ink);r(eye,-28,1,2,'#fff8e5');r(eye+1,-25,1,1,'#aa7e78');if(female)r(eye-1,-29,4,1,ink);}
-        r(-7,-23,3,2,'#d9918b77');r(4,-23,3,2,'#d9918b77');r(-1,-24,2,1,shadow);r(-1,-21,2,1,'#b36e6c');
-      }
+    // Keep the jaw the base skin tone. Broad dark strips below the mouth read
+    // as facial hair at this resolution, especially in enlarged portraits.
+    r(-6,-35,12,2,faceShade);r(-8,-33,16,11,faceShade);
+    r(-7,-33,14,11,skin);r(-5,-34,10,13,skin);
+    r(-6,-22,12,2,skin);r(-4,-20,8,1,skin);r(-2,-19,4,1,faceShade);
+    r(-6,-32,8,6,faceLight);
+    r(-9,-28,2,5,faceShade);r(7,-28,2,5,faceShade);r(-9,-27,1,2,skin);r(8,-27,1,2,skin);
+    if (side) {
+      r(3,-28,3,4,ink);r(3,-28,1,2,'#fff8e5');r(4,-25,1,1,'#8e7674');
+      r(7,-25,2,2,skin);r(5,-21,2,1,lip);r(1,-23,2,1,cheek);
+      if(female)r(5,-29,2,1,ink);
+    } else {
+      for(const eye of [-6,3]){r(eye,-28,3,4,ink);r(eye,-28,1,2,'#fff8e5');r(eye+1,-25,1,1,'#8e7674');if(female)r(eye-1,-29,4,1,ink);}
+      r(-6,-23,2,1,cheek);r(4,-23,2,1,cheek);r(0,-24,1,1,faceShade);r(-1,-21,2,1,lip);
     }
   }
   if (back) {
@@ -197,7 +206,7 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     }
   } else if (side) {
     // Keep the forehead, eye and nose exposed; the near lock falls behind the ear.
-    r(-2,-27,3,5,shadow); r(-1,-26,2,3,skin);
+    r(-2,-27,3,5,faceShade); r(-1,-26,2,3,skin);
     r(-5,-39,9,1,hairDark); r(-8,-38,13,2,hairDark); r(-9,-36,16,7,hairDark);
     r(-6,-38,10,2,hair); r(-8,-36,14,5,hair);
     r(-8,-33,12,3,hair); r(2,-31,4,1,hair); r(2,-30,3,1,hair);

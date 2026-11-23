@@ -2,13 +2,14 @@ const ITEMS = [
   { id: 'seeds', name: 'Moonroot seeds', kind: 'For the garden', description: 'Plant in an empty bed beside Rowan, then water it. A night’s sleep at your cottage gives it time to grow.' },
   { id: 'moonroot', name: 'Moonroot', kind: 'Freshly harvested', description: 'A small, pale root, warm against your palm. The old shrine across the bridge has a bowl just its size.' },
   { id: 'starflowers', name: 'Starflowers', kind: 'From the meadow', description: 'Pale flowers growing around the village and meadow. Gather three for an offering at the old shrine.' },
+  { id: 'blade', name: 'Wren’s blade', kind: 'For the woodland trail', description: 'A well-kept practice blade from your aunt. Hold Z to attack, face your target with the movement keys, and use X to dodge.' },
   { id: 'watering-can', name: 'Watering can', kind: 'A trusty tool', description: 'A gift from Rowan. Use it beside a planted garden bed with E. It never runs dry.' },
 ];
 
 // Quantities are derived from existing saves, including flowers left at the shrine.
 export function inventoryItems(state) {
-  const quantities = { seeds: state.seeds, moonroot: state.moonroot, starflowers: state.awakened ? 0 : state.flowers.length, 'watering-can': state.metRowan ? 1 : 0 };
-  return ITEMS.map(item => ({ ...item, quantity: quantities[item.id] }));
+  const quantities = { seeds: state.seeds, moonroot: state.moonroot, starflowers: state.awakened ? 0 : state.flowers.length, 'watering-can': state.metRowan ? 1 : 0, blade: state.hasBlade ? 1 : 0 };
+  return ITEMS.filter(item => item.id !== 'blade' || state.hasBlade).map(item => ({ ...item, quantity: quantities[item.id] }));
 }
 
 export function drawItemIcon(canvas, id) {
@@ -30,6 +31,8 @@ export function drawItemIcon(canvas, id) {
       r(x-5,y-1,11,3,'#f8e9b1');r(x-1,y-5,3,11,'#f8e9b1');
       r(x-3,y-3,7,7,'#fff3cb');r(x-1,y-1,3,3,'#d6ad6c');r(x,y,1,1,'#fae5a0');
     }
+  } else if (id === 'blade') {
+    r(6,24,5,5,'#957456');r(10,19,4,6,'#d2b67c');r(8,18,9,3,'#b29c71');r(13,8,3,12,'#b8c7bd');r(15,5,3,12,'#e4e5c8');r(17,3,3,9,'#e4e5c8');r(18,3,2,5,'#fff1cc');
   } else if (id === 'watering-can') {
     r(5,12,6,3,'#91b8b2');r(4,14,3,7,'#638e8c');r(5,20,6,3,'#638e8c');
     r(10,12,14,14,'#527979');r(11,13,12,11,'#83aaa4');r(12,14,3,8,'#acc9b9');

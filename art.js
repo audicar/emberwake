@@ -1,7 +1,9 @@
-import { FLOWERS, PLOTS, isGrown } from './core.js';
-import { drawCharacter } from './character.js?v=0.3.0';
-export { drawCharacter } from './character.js?v=0.3.0';
-import { CAST } from './cast.js?v=0.3.0';
+import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.4.0';
+import { drawCharacter } from './character.js?v=0.4.0';
+export { drawCharacter } from './character.js?v=0.4.0';
+import { CAST } from './cast.js?v=0.4.0';
+import { drawDragon } from './dragon.js?v=0.4.0';
+export { tree as drawTree };
 export const WORLD = { width: 832, height: 576 };
 export const BUILDINGS = [{ x: 112, y: 144, w: 96, h: 80, name: 'Your cottage', roof: '#ad6a52' }, { x: 320, y: 112, w: 96, h: 80, name: 'Mira’s stitches', roof: '#67778a' }, { x: 112, y: 352, w: 64, h: 64, name: 'The potting shed', roof: '#a77f4f' }];
 const trees = [];
@@ -10,7 +12,7 @@ for (let y = 100; y < 550; y += 40) for (let x = 20; x < 820; x += 36) {
   const edge = x < 76 || x > 790 || y > 510 || y < 115;
   if (edge && hash(x, y) % 4 !== 0 && !(x > 260 && x < 340 && y > 500) && !(x > 640 && x < 770 && y < 130)) trees.push({ x: x + hash(y, x) % 11, y, size: 1 + hash(x, y) % 3 / 10 });
 }
-trees.push({ x: 466, y: 159, size: 1.3 }, { x: 110, y: 288, size: 1.2 }, { x: 370, y: 430, size: 1.15 }, { x: 519, y: 334, size: 1.1 }, { x: 673, y: 445, size: 1.2 }, { x: 766, y: 250, size: 1.1 });
+trees.push({ x: 497, y: 151, size: 1.3 }, { x: 110, y: 288, size: 1.2 }, { x: 370, y: 430, size: 1.15 }, { x: 519, y: 334, size: 1.1 }, { x: 673, y: 445, size: 1.2 }, { x: 766, y: 250, size: 1.1 });
 export function riverX(y) { return 578 + Math.floor(Math.sin(y / 90) * 13); }
 export function blocked(x, y) {
   if (x < 22 || x > 810 || y < 120 || y > 545) return true;
@@ -61,7 +63,7 @@ function house(c,b) {
   for (const wx of [x+14,x+w-29]) { rect(c,wx-2,y+43,19,21,'#8e8060');rect(c,wx,y+45,15,15,'#6d9291');rect(c,wx+2,y+47,5,5,'#d9dfb1');rect(c,wx+6,y+45,2,15,'#c8b990');rect(c,wx,y+51,15,2,'#c8b990');rect(c,wx-3,y+62,22,4,'#8c6549'); for(let i=0;i<4;i++){rect(c,wx+i*4,y+60,3,3,'#7e9859');rect(c,wx+i*4,y+58,2,2,i%2?'#e7b57b':'#b8a2a3');} }
 }
 function flowers(c,x,y,colour) { rect(c,x,y-4,1,5,'#526f41');rect(c,x-2,y-6,5,3,colour);rect(c,x-1,y-7,3,5,colour);rect(c,x,y-5,1,1,'#f6dda0'); }
-export function drawWorld(c, s, time, camera) {
+export function drawWorld(c, s, time, camera, companion = null) {
   c.save();c.translate(-camera.x,-camera.y);
   rect(c,0,0,832,576,'#95a97b');
   // The distant ridge is kept in the map, so it remains still when the camera follows you.
@@ -73,9 +75,13 @@ export function drawWorld(c, s, time, camera) {
   const path=(x,y,w,h)=>{rect(c,x-2,y-2,w+4,h+4,'#a7b489');rect(c,x,y,w,h,'#d5c69e');for(let py=y+3;py<y+h;py+=7)for(let px=x+3;px<x+w;px+=8)if(hash(px,py)%3===0)rect(c,px,py,3,1,'#c0ae87');};
   path(146,227,46,44);path(161,256,389,29);path(268,182,33,254);path(280,232,100,30);path(358,196,28,47);path(285,296,327,28);path(628,296,94,28);path(700,192,29,130);
   // Small flower drifts along path edges make the village feel tended.
-  for(const [bx,by] of [[207,251],[307,286],[480,287],[653,332],[92,244],[188,453],[425,199]]){
+  for(const [bx,by] of [[207,251],[307,286],[480,287],[653,332],[92,244],[188,453]]){
     for(let i=0;i<9;i++){const px=bx+hash(bx+i,by)%24-12,py=by+hash(bx,by+i)%16-8;flowers(c,px,py,i%3===0?'#eed9c5':i%3===1?'#d7acc0':'#e8c998');}
   }
+  path(278,436,24,98);
+  rect(c,312,490,3,22,'#806e50');rect(c,302,482,25,12,'#c9b487');rect(c,307,486,15,2,'#7c7654');
+  if(!s.awakened){for(let i=0;i<4;i++){rect(c,277+i*7,501-i%2*3,4,17,'#54734c');rect(c,274+i*7,505-i%2*3,9,4,'#839d68');}}
+  ellipse(c,452,215,15,9,'#b0b98a');
   // Garden fence and the beds.
   rect(c,220,322,116,55,'#8a9860');
   for(let x=216;x<=340;x+=12){rect(c,x,367,3,14,'#b9ab7d');rect(c,x,369,3,2,'#e1c99c');}rect(c,216,372,127,3,'#b5a376');
@@ -91,10 +97,10 @@ export function drawWorld(c, s, time, camera) {
   ellipse(c,338,263,16,7,'#506b4e66');rect(c,327,248,23,17,'#969b80');rect(c,330,249,17,5,'#3d5b51');rect(c,326,237,3,20,'#8b7855');rect(c,348,237,3,20,'#8b7855');rect(c,323,233,32,5,'#af8760');rect(c,327,229,24,4,'#ba9667');
   rect(c,429,274,3,16,'#796c4e');rect(c,416,269,29,12,'#cdbb8a');rect(c,421,273,17,2,'#7e785a');
   for(const [x,y] of [[444,240],[658,357]]){rect(c,x,y,30,4,'#bb9b6d');rect(c,x,y-7,30,5,'#cdb082');rect(c,x+3,y+4,3,5,'#78694d');rect(c,x+24,y+4,3,5,'#78694d');}
-  for(const [x,y] of [[100,235],[212,231],[314,202],[419,195]]){rect(c,x,y,8,8,'#ac8061');rect(c,x-2,y-4,12,7,'#5b824d');flowers(c,x+4,y-2,'#dbb28f');}
+  for(const [x,y] of [[100,235],[212,231]]){rect(c,x,y,8,8,'#ac8061');rect(c,x-2,y-4,12,7,'#5b824d');flowers(c,x+4,y-2,'#dbb28f');}
   for(const [x,y] of [[192,389],[202,396]]){rect(c,x,y,10,10,'#a88d62');rect(c,x+2,y+2,6,6,'#94774f');rect(c,x+4,y,2,10,'#bea071');}
-  for(const f of FLOWERS)if(!s.flowers.includes(f.id)){flowers(c,f.x,f.y,'#eee0a3');rect(c,f.x-4,f.y-4,2,2,'#eee0a3');rect(c,f.x+3,f.y-4,2,2,'#eee0a3');if(Math.sin(time/450+f.x)>0.7)rect(c,f.x+5,f.y-12,1,2,'#fff0bd');}
-  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[CAST.rowan,CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance)})),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
+  for(const f of FLOWERS)if(!s.flowers.includes(f.id)){rect(c,f.x-4,f.y-5,9,1,'#f8e6ae');rect(c,f.x,f.y-9,1,9,'#f8e6ae');flowers(c,f.x,f.y,'#eee0a3');rect(c,f.x-4,f.y-4,2,2,'#eee0a3');rect(c,f.x+3,f.y-4,2,2,'#eee0a3');if(Math.sin(time/450+f.x)>0.7)rect(c,f.x+5,f.y-12,1,2,'#fff0bd');}
+  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[CAST.rowan,CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance)})),...(s.dragonBonded?[{y:(companion?.y??s.y+12),draw:()=>drawDragon(c,companion?.x??s.x-18,companion?.y??s.y+12,{direction:s.direction,time:time/1000})}]:[]),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
   sprites.sort((a,b)=>a.y-b.y).forEach(spr=>spr.draw());
   // Chimney smoke and butterflies are purely decorative.
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches){for(const b of BUILDINGS){for(let i=0;i<3;i++){const phase=(time/90+i*10)%38;rect(c,b.x+b.w-17+Math.sin(phase/9)*3,b.y-10-phase,4+Math.floor(phase/10),3,'#e0deba40');}}for(let i=0;i<5;i++){const x=205+i*79+Math.sin(time/2400+i)*15,y=390+Math.sin(time/1800+i*5)*23;rect(c,x,y,Math.floor(time/150)%2?3:1,2,i%2?'#edc895':'#e8e7b6');}}

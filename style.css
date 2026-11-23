@@ -115,6 +115,39 @@
 }
 
 /* Satchel and village map share the existing modal behaviour and keyboard focus. */
+#combat-hud { position: absolute; right: 24px; top: 24px; min-width: 250px; background: #20382ee8; border: 1px solid #a5ad80; padding: 15px 18px; box-shadow: 4px 4px 0 #17302555; }
+.notebook { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.menu-panel { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.quest-group { margin: 25px 0 12px; color: #526546; font: normal 21px Georgia, serif; }
+.quest-title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin-bottom: 7px; }
+.quest-title h4 { font-size: 12px; margin: 0; }
+.quest-tag { border: 1px solid #83906588; padding: 2px 5px; font-size: 8px; line-height: 1.4; white-space: nowrap; }
+.quest-tag.main { color: #5f573d; background: #d3c693; border-color: #a09365; }
+.quest-tag.optional { color: #68765a; }
+.quest-history { margin: 16px 0 22px; font-size: 11px; color: #647351; }
+.quest-history summary { cursor: pointer; padding: 9px 0; }
+.chapter-note { font-size: 12px; line-height: 1.8; }
+.music-settings { margin-top: 20px; padding-top: 16px; border-top: 1px solid #71856566; }
+.music-settings label { display: flex; justify-content: space-between; font-size: 12px; }
+#music-volume { width: 100%; accent-color: #e0b981; }
+#combat-hud .eyebrow { font-size: 8px; }
+#combat-hearts { color: #e4aa8d; font-size: 21px; letter-spacing: 3px; margin: 8px 0; }
+#combat-hud p { font-size: 11px; color: #e6d09e; margin: 8px 0; line-height: 1.6; }
+#combat-hud > div:last-child { font-size: 9px; color: #c2cdb0; margin-top: 12px; }
+.touch-combat { display: none; }
+@media(pointer:coarse) {
+  .in-woods .touch-combat { display: flex; flex-direction: column; gap: 5px; pointer-events: auto; margin-left: auto; margin-right: 10px; }
+  .in-woods .touch-combat button { color: #f5dab0; border-color: #d4b88b; }
+}
+@media(max-width:580px) {
+  #combat-hud { top: 74px; right: 12px; min-width: 0; width: 186px; padding: 11px 12px; }
+  #combat-hearts { font-size: 18px; letter-spacing: 2px; }
+  #combat-hud p { font-size: 10px; }
+  #combat-hud > div:last-child { font-size: 8px; line-height: 1.7; }
+  .in-woods .touch-controls { bottom: 88px; }
+  .in-woods #place-label .eyebrow { display: none; }
+  .in-woods #task-hint { max-width: calc(100% - 28px); }
+}
 .satchel, .village-map { position: relative; padding: 30px; max-height: calc(100dvh - 48px); overflow-y: auto; }
 .satchel { width: 600px; }
 .panel-intro { color: #b9c6ab; font-size: 12px; line-height: 1.7; margin: 0 0 22px; }
@@ -146,6 +179,7 @@
 #map-landmarks { position: absolute; inset: 0; pointer-events: none; }
 .map-landmark { position: absolute; transform: translate(-50%, -100%); white-space: nowrap; padding: 4px 6px; background: #20392de8; color: #f3e5bd; font-size: 10px; line-height: 1.5; border: 1px solid #c4bc8c99; box-shadow: 2px 2px 0 #19332966; }
 .map-player { position: absolute; z-index: 1; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 5px; }
+.map-starflower { position: absolute; transform: translate(-50%, -50%); color: #6e5435; background: #fff0b8; border: 1px solid #e3bd79; padding: 1px 3px; font-size: 13px; line-height: 1.2; box-shadow: 0 0 0 2px #7c8c5b66; }
 .map-player > span:last-child { position: absolute; bottom: 17px; left: 50%; transform: translateX(-50%); padding: 4px 7px; color: #283a2c; background: #f7d99b; border: 1px solid #fff1c3; font-size: 11px; font-weight: bold; }
 .map-player-dot, .map-legend-dot { display: inline-block; width: 11px; height: 11px; background: #ffda88; border: 2px solid #fff4d0; box-shadow: 0 0 0 2px #5a6242; transform: rotate(45deg); }
 .map-north { position: absolute; right: 12px; top: 12px; color: #fff0c5; font-size: 12px; line-height: 1.5; text-align: center; text-shadow: 1px 1px #1c362b; }

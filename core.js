@@ -12,16 +12,27 @@ export const STYLES = {
   outfit: ['Dungarees', 'Travel tunic', 'Linen dress', 'Pinafore', 'Cottage blouse', 'Petal dress', 'Cosy cardigan', 'Sailor dress'],
   accessory: ['None', 'Scarf', 'Sun hat', 'Hair bow', 'Flower clip', 'Beret'],
 };
-export const FLOWERS = [{ id: 'f1', x: 400, y: 200 }, { id: 'f2', x: 480, y: 424 }, { id: 'f3', x: 200, y: 440 }];
+export const FLOWERS = [{ id: 'f1', x: 452, y: 215 }, { id: 'f2', x: 480, y: 424 }, { id: 'f3', x: 200, y: 440 }];
 export const PLOTS = [{ x: 256, y: 344 }, { x: 280, y: 344 }, { x: 304, y: 344 }];
 export const QUESTS = [
-  ['metRowan', 'A neighbourly hello', 'Find Rowan beside the garden, just south of the village square.'],
-  ['harvested', 'Something worth tending', 'Plant and water a moonroot. Sleep at your cottage, then harvest it.'],
-  ['flowers', 'A handful of starlight', 'Gather three starflowers around the village and meadow.'],
-  ['awakened', 'The dream beneath the hill', 'Bring your moonroot and starflowers to the shrine across the bridge.'],
+  ['metRowan', 'A neighbourly hello', 'Find Rowan beside the garden, just south of the village square.', 'main'],
+  ['harvested', 'Something worth tending', 'Plant and water a moonroot. Go inside your cottage, sleep in the bed, then harvest it.', 'main'],
+  ['flowers', 'A handful of starlight', 'Gather three starflowers around the village and meadow. M marks the ones still growing.', 'main'],
+  ['awakened', 'The dream beneath the hill', 'Bring your moonroot and starflowers to the shrine across the bridge.', 'main'],
+  ['dragonBonded', 'A cry in the trees', 'Take the southern trail into Briarwood and help the stranded hatchling.', 'main'],
+  ['guardianFreed', 'The thornbound guardian', 'Clear the bramble sprites, break the guardian’s binding, then approach it with E.', 'main'],
+  ['homecoming', 'A place for two', 'Bring your hatchling home to the cottage.', 'main'],
+  ['metMira', 'A visit to the tailor', 'Introduce yourself to Mira outside the blue-roofed cottage.', 'optional'],
 ];
+export function questComplete(state,key) { return key === 'flowers' ? state.flowers.length === 3 : state[key] === true; }
+export function activeMainQuest(state) { return QUESTS.find(q => q[3] === 'main' && !questComplete(state,q[0])) ?? null; }
+export function completedMainQuests(state) {
+  const completed=[];
+  for(const quest of QUESTS.filter(q=>q[3]==='main')) { if(!questComplete(state,quest[0]))break;completed.push(quest); }
+  return completed;
+}
 export function newState(appearance = {}) {
-  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false };
+  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, guardianFreed: false, homecoming: false };
 }
 export function validateSave(value) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 20) throw new Error('This is not an Emberwake save.');
@@ -40,6 +51,12 @@ export function validateSave(value) {
     if (!Number.isInteger(n) || n < 0 || n >= options.length) throw new Error('The saved appearance is invalid.');
     s.appearance[key] = n;
   }
+  for (const key of ['hasBlade', 'dragonBonded', 'guardianFreed', 'homecoming']) {
+    if (value[key] !== undefined && typeof value[key] !== 'boolean') throw new Error('The saved adventure progress is invalid.');
+    s[key] = value[key] === true;
+  }
+  if (s.homecoming && !s.guardianFreed) throw new Error('The saved homecoming is invalid.');
+  if (s.guardianFreed && !s.dragonBonded) throw new Error('The saved dragon bond is invalid.');
   if (!Array.isArray(value.flowers) || value.flowers.some(id => !FLOWERS.some(f => f.id === id)) || new Set(value.flowers).size !== value.flowers.length) throw new Error('The saved flowers are invalid.');
   s.flowers = [...value.flowers];
   if (!Array.isArray(value.plots) || value.plots.length !== 3) throw new Error('The saved garden is invalid.');
@@ -71,9 +88,12 @@ export function objective(s) {
     if (s.plots.some(Boolean)) return 'Give your moonroot a little water.';
     return 'Plant a moonroot in the garden’s soil.';
   }
-  if (s.flowers.length < 3) return `Gather starflowers in the meadow. ${s.flowers.length}/3`;
+  if (s.flowers.length < 3) return `Gather starflowers · ${s.flowers.length}/3. Check M for their locations.`;
   if (!s.awakened) return 'Visit the old shrine, across the eastern bridge.';
-  return 'A dragon is dreaming of your little garden.';
+  if (!s.dragonBonded) return 'Follow the southern trail into Briarwood.';
+  if (!s.guardianFreed) return 'Return to Briarwood and help the bound guardian.';
+  if (!s.homecoming) return 'Bring your hatchling home to the cottage.';
+  return 'Your hatchling has found a home here.';
 }
-export function canAwaken(s) { return !s.awakened && s.moonroot > 0 && s.flowers.length === 3; }
+export function canAwaken(s) { return activeMainQuest(s)?.[0] === 'awakened' && s.moonroot > 0 && s.flowers.length === 3; }
 export function awaken(s) { if (!canAwaken(s)) return false; s.moonroot--; s.awakened = true; return true; }

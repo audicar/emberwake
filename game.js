@@ -1,5 +1,5 @@
 import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown } from './core.js';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.2.1';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.2.2';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');

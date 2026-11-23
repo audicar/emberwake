@@ -51,3 +51,24 @@ test('left-facing hairstyles are exact reflections of their right-facing profile
     assert.deepEqual(render(a,'left'),reflected);
   }
 });
+test('long rear hairstyles cover the back of the clothes and respond to hair colour', () => {
+  for(const hairStyle of [2,4,9])for(let gender=0;gender<2;gender++)for(let outfit=0;outfit<STYLES.outfit.length;outfit++)for(const accessory of [0,1]) {
+    const a=newState({hairStyle,gender,outfit,accessory,hair:0,colour:0}).appearance;
+    const normal=new Map(render(a,'up'));
+    const otherCloth=new Map(render({...a,colour:3},'up'));
+    const otherHair=new Map(render({...a,hair:2},'up'));
+    for(const point of ['0,-20','0,-15','-3,-12']) {
+      assert.equal(normal.get(point),otherCloth.get(point),`${STYLES.hairStyle[hairStyle]} must lie over the clothes at ${point}`);
+      assert.notEqual(normal.get(point),otherHair.get(point),'rear hair must use the chosen hair colour');
+    }
+  }
+});
+test('each hairstyle has a distinct rear silhouette without a front-facing face', () => {
+  const a=newState({accessory:0,hair:0}).appearance;
+  const views=STYLES.hairStyle.map((_,hairStyle)=>render({...a,hairStyle},'up'));
+  assert.equal(new Set(views.map(v=>JSON.stringify(v))).size,STYLES.hairStyle.length);
+  for(const view of views) {
+    const pixels=new Map(view);
+    for(let y=-33;y<=-24;y++)for(let x=-6;x<6;x++)assert.notEqual(pixels.get(`${x},${y}`),PALETTES.skin[a.skin],'rear crown must cover the head');
+  }
+});

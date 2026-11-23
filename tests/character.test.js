@@ -40,7 +40,7 @@ test('profile hair leaves the visible eye and nose clear for every style and acc
       const pixels=new Map(render(a,direction));
       const x=rightX=>direction==='right'?rightX:-rightX-1;
       assert.equal(pixels.get(`${x(4)},-27`),'#3b3542',`${STYLES.hairStyle[hairStyle]} must leave the ${direction} eye visible`);
-      assert.equal(pixels.get(`${x(7)},-24`),PALETTES.skin[a.skin],`${STYLES.hairStyle[hairStyle]} must leave the ${direction} nose clear`);
+      assert.equal(pixels.get(`${x(6)},-24`),PALETTES.skin[a.skin],`${STYLES.hairStyle[hairStyle]} must leave the ${direction} nose clear`);
     }
   }
 });
@@ -91,12 +91,14 @@ test('profile clothing has less depth than the front-facing shoulders', () => {
   }
 });
 
-test('profile bangs overlap the forehead and the nose projects beyond the cheek', () => {
+test('profile bangs cover the forehead and the nose stays close to the cheek', () => {
   for(let skin=0;skin<PALETTES.skin.length;skin++)for(let hairStyle=0;hairStyle<STYLES.hairStyle.length;hairStyle++)for(const direction of ['left','right']) {
     const a=newState({skin,hairStyle,accessory:0}).appearance,pixels=new Map(render(a,direction));
     const x=value=>direction==='right'?value:-value-1;
     assert.equal(pixels.get(`${x(4)},-30`),PALETTES.hair[a.hair],'the fringe must extend over the profile forehead');
-    assert.equal(pixels.get(`${x(8)},-24`),PALETTES.skin[skin],'a visible nose must project in front of the cheek');
-    assert.equal(pixels.get(`${x(8)},-22`),undefined,'the nose must have a distinct silhouette above the inset mouth and chin');
+    for(const y of [-34,-33,-32])assert.equal(pixels.get(`${x(5)},${y}`),PALETTES.hair[a.hair],'skin must not poke through the fringe');
+    for(const y of [-31,-30])for(const forehead of [1,2])assert.equal(pixels.get(`${x(forehead)},${y}`),PALETTES.hair[a.hair],'the full fringe must not leave gaps above the eye');
+    assert.equal(pixels.get(`${x(6)},-24`),PALETTES.skin[skin],'the nose is a small step beyond the cheek');
+    for(const tip of [7,8])assert.equal(pixels.get(`${x(tip)},-24`),undefined,'the nose must not form a long point');
   }
 });

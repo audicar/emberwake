@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.4.2';
+import { PALETTES } from './core.js?v=0.4.3';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
@@ -91,7 +91,7 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     // Rounded forehead, small projecting nose and a softly tucked-in chin.
     // No far-side ear or rectangular front-facing cheek is visible here.
     r(-5,-35,9,12,faceShade);r(-3,-34,9,11,skin);r(-2,-32,8,9,skin);
-    r(-1,-31,5,4,faceLight);r(6,-26,1,3,skin);r(7,-25,1,2,skin);r(8,-24,1,1,skin);
+    r(-1,-31,5,4,faceLight);r(6,-26,1,3,skin);
     r(-1,-23,7,2,skin);r(0,-21,5,1,skin);r(0,-20,3,1,skin);
     r(3,-28,3,4,ink);r(3,-28,1,2,'#fff8e5');r(4,-25,1,1,'#8e7674');
     if(female)r(4,-29,2,1,ink);
@@ -101,7 +101,7 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     r(-5,-39,7,1,hairDark);r(-7,-38,11,2,hairDark);r(-8,-36,13,6,hairDark);
     r(-6,-37,9,3,hair);r(-7,-35,11,4,hair);r(-7,-31,7,4,hair);
     r(-5,-37,6,1,hairLight);r(-6,-35,3,1,hairShine);r(0,-34,3,1,hairLight);
-    r(1,-32,5,1,hair);r(2,-31,4,1,hair);r(3,-30,3,1,hair);r(-2,-31,3,2,hair);
+    r(1,-35,4,1,hair);r(1,-34,5,3,hair);r(-2,-31,8,2,hair);
     lock(-8,-30,5,cropped?6:10);
     // The ear bridges the nape and cheek without a dark vertical sideburn.
     r(-2,-27,2,4,faceShade);r(-2,-26,2,2,skin);

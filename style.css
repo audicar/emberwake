@@ -65,7 +65,7 @@
 .choice-card[aria-pressed=true]:after { content: '✦'; position: absolute; right: 4px; top: 3px; font-size: 9px; color: #f5dba8; }
 .choice-card canvas { image-rendering: pixelated; width: 48px; height: auto; }
 .choice-card span { font-size: 10px; line-height: 1.4; text-align: center; }
-.swatches { gap: 6px; }
+.swatches { gap: 6px; flex-wrap: wrap; justify-content: flex-end; min-width: 0; padding: 3px; }
 .swatch { width: 23px; height: 23px; flex-shrink: 0; }
 .accessory-options { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .accessory-options button { padding: 5px 7px; border: 1px solid #82907555; font-size: 10px; }

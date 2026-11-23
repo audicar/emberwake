@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.4.0';
+import { PALETTES } from './core.js?v=0.4.1';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
@@ -207,9 +207,11 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
   } else if (side) {
     // Keep the forehead, eye and nose exposed; the near lock falls behind the ear.
     r(-2,-27,3,5,faceShade); r(-1,-26,2,3,skin);
-    r(-5,-39,9,1,hairDark); r(-8,-38,13,2,hairDark); r(-9,-36,16,7,hairDark);
-    r(-6,-38,10,2,hair); r(-8,-36,14,5,hair);
-    r(-8,-33,12,3,hair); r(2,-31,4,1,hair); r(2,-30,3,1,hair);
+    // A swept fringe wraps around the profile instead of carrying the front
+    // view's flat fringe across the forehead. The eye sits below its tapered tip.
+    r(-5,-39,8,1,hairDark); r(-8,-38,13,2,hairDark); r(-9,-36,15,5,hairDark);
+    r(-6,-38,9,2,hair); r(-8,-36,13,5,hair);
+    r(-4,-34,10,2,hair); r(-2,-32,8,1,hair); r(1,-31,4,1,hair); r(-2,-31,3,2,hair);
     r(-6,-37,7,1,hairLight); r(-7,-35,4,1,hairShine); r(-5,-36,4,1,hairLight);
     lock(-9,-31,7,style===1||style===10?5:10);
     if (style === 0) { r(-8,-22,6,2,hair); r(-7,-23,2,2,hairLight); }

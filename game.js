@@ -1,11 +1,11 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.0';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.0';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.0';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.0';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.0';
-import { drawWilds } from './wilds.js?v=0.4.0';
-import { BackgroundMusic } from './music.js?v=0.4.0';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.0';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.1';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.1';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.1';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.1';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.1';
+import { drawWilds } from './wilds.js?v=0.4.1';
+import { BackgroundMusic } from './music.js?v=0.4.1';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.1';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -230,7 +230,12 @@ function renderOptions() {
     const row=document.createElement('div');row.className='option-row';
     const name=document.createElement('span');name.className='option-label';name.textContent=label;
     const choices=document.createElement('div');choices.className='swatches';choices.setAttribute('role','group');choices.setAttribute('aria-label',label);
-    PALETTES[key].forEach((colour,i)=>{const b=document.createElement('button');b.type='button';b.className='swatch';b.style.setProperty('--swatch',colour);b.dataset.appearance=key;b.dataset.choice=i;b.setAttribute('aria-label',`${label} ${i+1}`);b.setAttribute('aria-pressed',String(draft[key]===i));b.onclick=()=>updateAppearance(key,i);choices.append(b);});
+    const colours=PALETTES[key].map((colour,index)=>({colour,index}));
+    if(key==='skin') {
+      const brightness=hex=>hex.slice(1).match(/../g).reduce((sum,channel,i)=>sum+parseInt(channel,16)*[.2126,.7152,.0722][i],0);
+      colours.sort((a,b)=>brightness(b.colour)-brightness(a.colour));
+    }
+    colours.forEach(({colour,index},position)=>{const b=document.createElement('button');b.type='button';b.className='swatch';b.style.setProperty('--swatch',colour);b.dataset.appearance=key;b.dataset.choice=index;b.setAttribute('aria-label',`${label} ${position+1}`);b.setAttribute('aria-pressed',String(draft[key]===index));b.onclick=()=>updateAppearance(key,index);choices.append(b);});
     row.append(name,choices);root.append(row);
   };
   const heading = (title, text) => {const h=document.createElement('h3');h.className='customise-heading';h.textContent=title;const p=document.createElement('p');p.className='customise-help';p.textContent=text;root.append(h,p);};

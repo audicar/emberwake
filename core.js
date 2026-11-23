@@ -1,7 +1,8 @@
 // The small, serialisable part of the game. Rendering and browser APIs live elsewhere.
 export const SAVE_KEY = 'emberwake.save.v1';
 export const PALETTES = {
-  skin: ['#f4d2ab', '#dfaa80', '#b97855', '#895337', '#603c30'],
+  // Append shades so existing saves and villagers keep their original colours.
+  skin: ['#f4d2ab', '#dfaa80', '#b97855', '#895337', '#603c30', '#f9dfcf', '#ebc6b8', '#d9b89b', '#c69b7b', '#ab8067', '#765447', '#402c29'],
   hair: ['#51382e', '#a9683e', '#d1b779', '#292c32', '#b8bac0', '#a56b85', '#d3a8c5', '#d7a18a'],
   colour: ['#83a88b', '#c78378', '#83a9bb', '#b49ac2', '#dbb977', '#5c7c96', '#ddb3b3', '#acc8b3'],
 };

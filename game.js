@@ -1,13 +1,13 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.3';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.3';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.3';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.3';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.3';
-import { drawWilds } from './wilds.js?v=0.5.3';
-import { BackgroundMusic } from './music.js?v=0.5.3';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.3';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.3';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.3';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.4';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.4';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.4';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.4';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.4';
+import { drawWilds } from './wilds.js?v=0.5.4';
+import { BackgroundMusic } from './music.js?v=0.5.4';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.4';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.4';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.4';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -109,7 +109,8 @@ function updateWorkshopButton() {
   if(button.disabled!==!ready)button.disabled=!ready;
   if(ready&&document.activeElement===$('workshop'))button.focus();
   const label=!ready?'A moment…':workshop.beat.nextLabel||(workshop.isLast?'Continue to Hearthvale':'Continue');
-  if(button.textContent!==label)button.textContent=label;
+  const caption=$('workshop-next-label');
+  if(caption.textContent!==label)caption.textContent=label;
 }
 function startWorkshop(step=WORKSHOP.order[0]) {
   workshop=new WorkshopSequence(step);state.workshopStep=step;dialogue=null;nextAction=null;$('dialogue').hidden=true;

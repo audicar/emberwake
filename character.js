@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.5.3';
+import { PALETTES } from './core.js?v=0.5.4';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));

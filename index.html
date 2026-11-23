@@ -6,7 +6,7 @@
   <meta name="description" content="A little life beside a sleeping dragon. A free, single-player pixel adventure with character customisation and local saves.">
   <title>Emberwake · A little life, a quiet calling</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=0.5.3">
+  <link rel="stylesheet" href="./style.css?v=0.5.4">
 </head>
 <body>
 <main id="game">
@@ -44,9 +44,9 @@
   <section class="workshop-shell">
     <header class="workshop-header"><div><span class="eyebrow">A QUIET BEGINNING</span><h2 id="workshop-title">Before Hearthvale</h2></div><div class="workshop-tools"><button id="workshop-sound" aria-pressed="false">Music off</button><button id="workshop-skip">Skip scene <kbd>Esc</kbd></button></div></header>
     <div class="workshop-stage"><canvas id="workshop-canvas" width="384" height="216" role="img" aria-label="The workshop"></canvas><section id="workshop-notice" class="workshop-notice" role="document" aria-labelledby="workshop-notice-title" hidden><span>This season</span><h3 id="workshop-notice-title">Promotions</h3><ul id="workshop-promotion-names"></ul></section><article id="workshop-letter" class="workshop-notice workshop-letter" role="document" aria-labelledby="workshop-letter-title" hidden><h3 id="workshop-letter-title" class="visually-hidden">Aunt Wren’s letter</h3><p id="workshop-letter-salutation" class="letter-salutation"></p><div id="workshop-letter-body"></div><p class="letter-signature"><span id="workshop-letter-signoff"></span><span id="workshop-letter-signature"></span></p></article></div>
-    <div id="workshop-dialogue" class="workshop-dialogue"><canvas id="workshop-portrait" width="84" height="88" role="img" aria-label="Speaker portrait" hidden></canvas><div class="workshop-lines" aria-live="polite" aria-atomic="true"><span id="workshop-speaker" class="eyebrow"></span><p id="workshop-text"></p><span id="workshop-description" class="visually-hidden"></span></div><button id="workshop-next" class="workshop-continue">Continue</button></div>
-    <footer class="workshop-footer"><span id="workshop-setting">The workshop · end of the working day</span><span><kbd>E</kbd> / Space to continue</span></footer>
+    <div id="workshop-dialogue" class="workshop-dialogue"><canvas id="workshop-portrait" width="84" height="88" role="img" aria-label="Speaker portrait" hidden></canvas><div class="workshop-lines" aria-live="polite" aria-atomic="true"><span id="workshop-speaker" class="eyebrow"></span><p id="workshop-text"></p><span id="workshop-description" class="visually-hidden"></span></div><button id="workshop-next" class="workshop-continue" aria-keyshortcuts="E Space Enter" title="Press E, Space or Enter to continue"><span id="workshop-next-label">Continue</span><kbd>E</kbd></button></div>
+    <footer class="workshop-footer"><span id="workshop-setting">The workshop · end of the working day</span><span class="workshop-key-hint">Press <kbd>E</kbd> to continue</span></footer>
   </section>
 </div>
-<script type="module" src="./game.js?v=0.5.3"></script>
+<script type="module" src="./game.js?v=0.5.4"></script>
 </body></html>

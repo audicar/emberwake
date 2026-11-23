@@ -237,12 +237,14 @@
 #workshop-portrait { width: 76px; height: 80px; image-rendering: pixelated; flex-shrink: 0; align-self: flex-start; }
 .workshop-lines .eyebrow { color: #dbbd84; font-size: 10px; }
 .workshop-lines p { font: 21px/1.55 Georgia,serif; color: #f0e7cc; margin: 10px 0 0; }
-.workshop-continue { flex-shrink: 0; border: 1px solid #b7a477; color: #e9d5a5; padding: 10px 14px; font-size: 11px; }
+.workshop-continue { display: inline-flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; border: 1px solid #b7a477; color: #e9d5a5; padding: 10px 14px; font-size: 11px; }
+.workshop-continue kbd { display: inline-block; margin: 0; color: #f4e5be; border: 1px solid #b7a477; font: 12px/1 ui-monospace,monospace; padding: 4px 6px; }
 .workshop-continue:disabled { opacity: .4; cursor: default; }
 .workshop-silent { background: transparent; border-color: transparent; }
 .workshop-footer { display: flex; justify-content: space-between; height: auto; padding: 0; border: 0; font-size: 10px; color: #9faa99; }
 .workshop-footer > span:last-child { display: inline; font: inherit; }
 .workshop-footer > span:first-child { display: inline; }
+.workshop-footer .workshop-key-hint { color: #e9d5a5; font-size: 12px; white-space: nowrap; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 @media (max-width: 600px) {
   .workshop-overlay { padding: 14px 12px; }
@@ -261,6 +263,7 @@
   .workshop-lines p { font-size: 19px; line-height: 1.5; }
   .workshop-continue { align-self: flex-end; }
   .workshop-footer { font-size: 8px; gap: 10px; }
+  .workshop-footer .workshop-key-hint { font-size: 10px; }
 }
 @media (max-height: 520px) and (min-width: 601px) {
   .workshop-notice { padding: 20px 24px 10px; }

@@ -1,6 +1,6 @@
-import { drawCharacter } from './character.js?v=0.5.3';
-import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.3';
-import { PALETTES } from './core.js?v=0.5.3';
+import { drawCharacter } from './character.js?v=0.5.4';
+import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.4';
+import { PALETTES } from './core.js?v=0.5.4';
 
 const WIDTH=384,HEIGHT=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(x,y,w,h);};
@@ -129,17 +129,19 @@ export function drawWorkshop(c,sequence,state,reducedMotion=false) {
   if(letterShots.includes(beat.shot)) {
     boss={x:289,y:132,direction:'down',walk:0};
     if(beat.shot==='find-letter') {
-      const walk=Math.min(1,Math.max(0,(t-.5)/1.2));
-      player={x:159+walk*34,y:159+walk*8,direction:walk<1?'right':'down',walk:walk>0&&walk<1?t*9:0};
+      const walk=Math.min(1,Math.max(0,(t-.9)/1.2));
+      player={x:159+walk*34,y:159+walk*8,direction:t<.9?'down':walk<1?'right':'down',walk:walk>0&&walk<1?t*9:0};
     } else player={x:193,y:167,direction:'down',walk:0};
   }
   drawCharacter(f,boss.x,boss.y,WORKSHOP.supervisor,boss.direction,boss.walk);
   const bagInsert=beat.shot==='fold-letter'&&t>=1.15;
   if(!bagInsert)drawCharacter(f,player.x,player.y,state.appearance,player.direction,player.walk);
   sharedBench(f);desk(f);workbench(f);
-  const invitationInBag=beat.shot==='find-letter'?t<1.8:beat.shot==='letter'?false:beat.shot==='fold-letter'?t>=2.1:true;
+  // Leave the tool on the order before deliberately turning to the invitation.
+  if(letterShots.includes(beat.shot))r(f,155,146,7,1,'#cbb888');
+  const invitationInBag=beat.shot==='find-letter'?t<2.3:beat.shot==='letter'?false:beat.shot==='fold-letter'?t>=2.1:true;
   satchel(f,letterShots.includes(beat.shot),invitationInBag);
-  if(beat.shot==='letter'||(beat.shot==='find-letter'&&t>=1.8))heldLetter(f,player,state.appearance);
+  if(beat.shot==='letter'||(beat.shot==='find-letter'&&t>=2.3))heldLetter(f,player,state.appearance);
   if(beat.shot==='fold-letter') {
     if(t<1.15)heldLetter(f,player,state.appearance,Math.min(1,t/1.1));
     else if(t<2.1) {

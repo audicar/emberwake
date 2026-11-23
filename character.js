@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.5.4';
+import { PALETTES } from './core.js?v=0.5.5';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
@@ -32,96 +32,100 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
   // Hair behind the body: each style has its own outline and strand clusters.
   const lock = (x, y, w, h) => { r(x,y,w,h,hairDark);r(x+1,y,w-2,h-2,hair);r(x+1,y+2,1,Math.max(1,h-5),hairLight); };
   if (side) {
-    // A true profile: the skull, nape and clothing share a narrow centreline.
-    // The far limbs sit behind the body; only the near shoulder is prominent.
+    // Keep the rounded volume of the front view when the character turns.
+    // The fuller nape and near sleeve give depth without adding a second eye.
     const long = [2,4,9].includes(style), cropped = [1,10].includes(style);
     if (long) {
-      lock(-9,-32,8,22);
-      if (style !== 2) { lock(-11,-25,5,13); lock(-9,-15,5,6); }
+      lock(-11,-32,10,22);
+      if (style !== 2) { lock(-13,-25,6,13); lock(-11,-15,6,6); }
     }
-    if ([5,6].includes(style)) lock(-9,-27,5,17);
-    if (style === 6) lock(-11,-26,4,16);
-    if (style === 7) { lock(-13,-33,7,16); lock(-12,-20,5,10); r(-9,-32,3,2,cloth); }
-    if (style === 11) { lock(-13,-32,6,17); lock(-10,-30,5,17); r(-10,-32,3,2,cloth); }
+    if ([5,6].includes(style)) lock(-11,-27,6,17);
+    if (style === 6) lock(-13,-26,5,16);
+    if (style === 7) { lock(-15,-33,8,16); lock(-14,-20,6,10); r(-11,-32,3,2,cloth); }
+    if (style === 11) { lock(-15,-32,7,17); lock(-12,-30,6,17); r(-12,-32,3,2,cloth); }
 
     // Legs overlap in an idle pose and separate horizontally while walking.
     const leg = (lx, far) => {
-      r(lx,-9,3,8,far?shadow:skin);r(lx,-3,3,2,cream);
-      r(lx-1,-1,6,2,ink);r(lx-1,-2,6,2,far?tint(boot,-.12):boot);
-      if(!far)r(lx+2,-2,2,1,'#bb9480');
+      r(lx,-9,4,8,far?shadow:skin);r(lx,-3,4,2,cream);
+      r(lx-1,-1,7,2,ink);r(lx-1,-2,7,2,far?tint(boot,-.12):boot);
+      if(!far)r(lx+2,-2,3,1,'#bb9480');
     };
     leg(-2-stride,true);leg(stride,false);
-    const depth = female?4:5, waistDepth=female?3:4;
-    r(-depth,-21,depth+4,4,clothDark);r(-depth+1,-21,depth+3,3,cloth);
-    r(-waistDepth,-18,waistDepth+4,10,clothDark);r(-waistDepth+1,-18,waistDepth+2,10,cloth);
-    r(-1,-24,4,4,faceShade);r(0,-24,3,4,skin);
+    const depth = female?6:7, waistDepth=female?5:6;
+    r(-depth+1,-22,depth+3,1,clothDark);
+    r(-depth,-21,depth+5,5,clothDark);r(-depth+1,-21,depth+3,4,cloth);
+    r(-waistDepth,-18,waistDepth+5,10,clothDark);r(-waistDepth+1,-18,waistDepth+3,10,cloth);
+    r(-6,-11,11,4,clothDark);r(-5,-11,9,3,cloth);
+    r(-2,-24,5,4,faceShade);r(-1,-24,4,4,skin);
     const profileSkirt = (length=8) => {
       for(let row=0;row<length;row++) {
-        const flare=Math.floor(row/3),left=-waistDepth-flare,width=waistDepth+4+flare*2;
+        const flare=Math.floor(row/3),left=-waistDepth-flare,width=waistDepth+5+flare*2;
         r(left,-14+row,width,1,clothDark);r(left+1,-14+row,width-2,1,cloth);
       }
       r(1,-13,1,length-2,clothLight);
     };
     if (outfit===0) {
-      r(-3,-19,6,11,cloth);r(2,-21,1,10,clothDark);r(2,-17,1,1,cream);
+      r(-waistDepth+1,-19,waistDepth+3,11,cloth);r(3,-21,1,10,clothDark);r(3,-17,1,1,cream);
       r(1,-13,3,3,clothDark);r(1,-13,2,2,clothLight);
-      r(-3,-8,7,3,cloth);r(-3,-5,7,1,clothLight);
+      r(-6,-8,11,3,cloth);r(-5,-5,9,1,clothLight);
     } else if (outfit===1) {
-      r(-waistDepth,-12,waistDepth+4,2,'#8e6e58');r(3,-12,1,2,'#e4c58d');
+      r(-waistDepth,-12,waistDepth+5,2,'#8e6e58');r(4,-12,1,2,'#e4c58d');
       r(-3,-13,3,5,'#a58360');r(-2,-12,2,1,'#c4a47c');
     } else {
       profileSkirt(outfit===5?10:9);
-      if ([2,3,4,5,7].includes(outfit)) {r(-depth,-21,depth+4,5,cream);r(3,-20,1,3,'#e7dac5');}
-      if (outfit===2) {r(-waistDepth,-15,waistDepth+4,2,cream);r(-5,-6,11,1,cream);}
+      if ([2,3,4,5,7].includes(outfit)) {r(-depth,-21,depth+5,5,cream);r(4,-20,1,3,'#e7dac5');}
+      if (outfit===2) {r(-waistDepth,-15,waistDepth+5,2,cream);r(-waistDepth-2,-6,waistDepth+9,1,cream);}
       if (outfit===3) {
         r(2,-21,1,8,clothDark);r(1,-18,2,5,cloth);r(2,-15,1,1,cream);
-        r(1,-10,4,4,cream);r(2,-10,2,3,'#eee2ce');r(-5,-6,11,1,cream);
+        r(1,-10,5,4,cream);r(2,-10,3,3,'#eee2ce');r(-waistDepth-2,-6,waistDepth+9,1,cream);
         r(3,-9,1,2,'#b5b991');r(2,-9,1,1,'#dca4a6');
       }
-      if (outfit===4) {r(2,-21,2,3,'#d7c4b1');r(3,-18,1,3,'#bda28c');r(-waistDepth,-14,waistDepth+4,1,'#7b645d');}
-      if (outfit===5) {r(-waistDepth,-15,waistDepth+4,2,cream);r(2,-15,2,2,'#f4d3cb');r(-2,-10,2,2,cream);r(3,-8,2,2,cream);r(-6,-5,13,1,cream);}
-      if (outfit===6) {r(-depth,-21,depth+4,10,clothDark);r(-depth+1,-20,depth+2,8,cloth);r(3,-20,1,8,cream);r(2,-20,1,8,clothLight);r(2,-16,1,1,'#ffe4b2');}
-      if (outfit===7) {r(2,-21,2,4,cream);r(3,-19,2,1,'#d58f91');r(3,-18,1,4,'#d58f91');r(-5,-6,11,1,cream);}
+      if (outfit===4) {r(2,-21,2,3,'#d7c4b1');r(3,-18,1,3,'#bda28c');r(-waistDepth,-14,waistDepth+5,1,'#7b645d');}
+      if (outfit===5) {r(-waistDepth,-15,waistDepth+5,2,cream);r(2,-15,2,2,'#f4d3cb');r(-3,-10,2,2,cream);r(3,-8,2,2,cream);r(-waistDepth-3,-5,waistDepth+11,1,cream);}
+      if (outfit===6) {r(-depth,-21,depth+5,10,clothDark);r(-depth+1,-20,depth+3,8,cloth);r(4,-20,1,8,cream);r(3,-20,1,8,clothLight);r(3,-16,1,1,'#ffe4b2');}
+      if (outfit===7) {r(2,-21,2,4,cream);r(3,-19,2,1,'#d58f91');r(3,-18,1,4,'#d58f91');r(-waistDepth-2,-6,waistDepth+9,1,cream);}
     }
     // The near arm overlaps the side seam instead of framing both body edges.
-    const armX=-1-stride;
-    r(armX-1,-20,4,6,clothDark);r(armX,-20,2,5,[3,4,5,7].includes(outfit)?cream:clothLight);
-    r(armX,-14,3,5,faceShade);r(armX,-14,2,4,skin);r(armX,-10,2,1,light);
+    const armX=-2-stride,sleeve=[3,4,5,7].includes(outfit)?cream:clothLight;
+    r(armX,-21,4,1,clothDark);r(armX-1,-20,6,5,clothDark);
+    r(armX,-20,4,4,sleeve);r(armX,-16,4,1,sleeve);
+    r(armX,-15,4,1,clothDark);r(armX,-14,4,5,faceShade);
+    r(armX,-14,3,4,skin);r(armX,-10,3,1,light);
 
     // Rounded forehead, small projecting nose and a softly tucked-in chin.
     // No far-side ear or rectangular front-facing cheek is visible here.
-    r(-5,-35,9,12,faceShade);r(-3,-34,9,11,skin);r(-2,-32,8,9,skin);
-    r(-1,-31,5,4,faceLight);r(6,-26,1,3,skin);
-    r(-1,-23,7,2,skin);r(0,-21,5,1,skin);r(0,-20,3,1,skin);
+    r(-7,-35,11,12,faceShade);r(-5,-34,11,11,skin);r(-4,-32,10,9,skin);
+    r(-3,-31,7,4,faceLight);r(6,-26,1,3,skin);
+    r(-3,-23,9,2,skin);r(-2,-21,7,1,skin);r(-1,-20,4,1,skin);
     r(3,-28,3,4,ink);r(3,-28,1,2,'#fff8e5');r(4,-25,1,1,'#8e7674');
     if(female)r(4,-29,2,1,ink);
-    r(1,-23,2,1,cheek);r(4,-22,1,1,lip);
+    r(0,-23,3,1,cheek);r(4,-22,1,1,lip);
 
     // The crown flows down into the nape, with a small curved fringe above the eye.
-    r(-5,-39,7,1,hairDark);r(-7,-38,11,2,hairDark);r(-8,-36,13,6,hairDark);
-    r(-6,-37,9,3,hair);r(-7,-35,11,4,hair);r(-7,-31,7,4,hair);
-    r(-5,-37,6,1,hairLight);r(-6,-35,3,1,hairShine);r(0,-34,3,1,hairLight);
+    r(-6,-39,8,1,hairDark);r(-9,-38,13,2,hairDark);r(-10,-36,15,6,hairDark);
+    r(-8,-37,11,3,hair);r(-9,-35,13,4,hair);r(-9,-31,7,4,hair);
+    r(-6,-37,7,1,hairLight);r(-8,-35,3,1,hairShine);r(0,-34,3,1,hairLight);
     r(1,-35,4,1,hair);r(1,-34,5,3,hair);r(-2,-31,8,2,hair);
-    lock(-8,-30,5,cropped?6:10);
+    lock(-10,-30,5,cropped?6:10);
     // The ear bridges the nape and cheek without a dark vertical sideburn.
-    r(-2,-27,2,4,faceShade);r(-2,-26,2,2,skin);
-    if (style===0) {r(-7,-23,4,3,hair);r(-6,-23,1,2,hairLight);}
-    if (long) {lock(-7,-25,4,14);if(style!==2){r(-9,-21,2,5,hairLight);r(-8,-13,3,2,hair);}}
+    r(-4,-27,2,4,faceShade);r(-4,-26,2,2,skin);
+    if (style===0) {r(-9,-23,4,3,hair);r(-8,-23,1,2,hairLight);}
+    if (long) {lock(-9,-25,5,14);if(style!==2){r(-11,-21,2,5,hairLight);r(-10,-13,4,2,hair);}}
     if ([5,6].includes(style)) {
-      for(let j=0;j<5;j++){const bx=-6+j%2;r(bx,-23+j*3,4,4,hairDark);r(bx,-23+j*3,3,2,hairLight);r(bx+1,-22+j*3,2,2,hair);}
-      r(-5,-8,3,2,cloth);r(-4,-6,2,2,hair);
+      for(let j=0;j<5;j++){const bx=-8+j%2;r(bx,-23+j*3,5,4,hairDark);r(bx,-23+j*3,4,2,hairLight);r(bx+1,-22+j*3,3,2,hair);}
+      r(-7,-8,4,2,cloth);r(-6,-6,3,2,hair);
     }
-    if (style===3) for(const [px,py] of [[-8,-36],[-6,-40],[-1,-40],[-9,-30],[-8,-25]]){r(px,py,4,5,hairDark);r(px,py,3,3,hair);r(px,py,2,1,hairLight);}
-    if (style===8) {lock(-12,-39,7,8);r(-10,-40,4,6,hair);r(-10,-38,3,1,hairLight);r(-10,-32,4,2,cloth);lock(-6,-41,5,5);}
-    if (style===9) {r(-6,-30,4,2,cloth);r(-6,-28,1,3,hairShine);}
+    if (style===3) for(const [px,py] of [[-10,-36],[-8,-40],[-2,-40],[-11,-30],[-10,-25]]){r(px,py,5,5,hairDark);r(px,py,4,3,hair);r(px,py,2,1,hairLight);}
+    if (style===8) {lock(-14,-39,8,8);r(-12,-40,5,6,hair);r(-12,-38,4,1,hairLight);r(-12,-32,5,2,cloth);lock(-7,-41,5,5);}
+    if (style===9) {r(-8,-30,4,2,cloth);r(-8,-28,1,3,hairShine);}
     if (style===10) {r(0,-32,3,2,hair);r(1,-30,2,1,hair);r(-2,-32,3,1,hairLight);}
 
     // Accessories follow the same profile plane, with the scarf below the chin.
-    if(a.accessory===1){r(-2,-20,6,2,'#e5b889');r(2,-18,2,6,'#e5b889');r(3,-18,1,5,'#f8d8a6');}
-    if(a.accessory===2){r(-10,-36,19,2,'#aa8056');r(-11,-37,21,2,'#f1d49b');r(-7,-41,13,5,'#e9c58b');r(-5,-42,9,2,'#f4dba6');r(-7,-37,13,2,clothDark);}
-    if(a.accessory===3){r(-10,-34,3,3,clothDark);r(-6,-34,3,3,clothDark);r(-10,-34,2,2,clothLight);r(-5,-34,2,2,clothLight);r(-7,-33,2,2,cream);r(-7,-31,2,4,cloth);}
-    if(a.accessory===4){for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2]])r(-4+dx,-32+dy,2,2,'#ffefda');r(-4,-32,2,2,'#e4b171');r(-3,-29,2,1,'#a9b78b');}
-    if(a.accessory===5){r(-7,-39,13,3,clothDark);r(-6,-41,10,3,cloth);r(-3,-42,6,2,clothLight);r(-8,-36,15,2,clothDark);}
+    if(a.accessory===1){r(-3,-20,7,2,'#e5b889');r(2,-18,2,6,'#e5b889');r(3,-18,1,5,'#f8d8a6');}
+    if(a.accessory===2){r(-12,-36,21,2,'#aa8056');r(-13,-37,23,2,'#f1d49b');r(-9,-41,15,5,'#e9c58b');r(-7,-42,11,2,'#f4dba6');r(-9,-37,15,2,clothDark);}
+    if(a.accessory===3){r(-12,-34,3,3,clothDark);r(-8,-34,3,3,clothDark);r(-12,-34,2,2,clothLight);r(-7,-34,2,2,clothLight);r(-9,-33,2,2,cream);r(-9,-31,2,4,cloth);}
+    if(a.accessory===4){for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2]])r(-6+dx,-32+dy,2,2,'#ffefda');r(-6,-32,2,2,'#e4b171');r(-5,-29,2,1,'#a9b78b');}
+    if(a.accessory===5){r(-9,-39,15,3,clothDark);r(-8,-41,12,3,cloth);r(-5,-42,8,2,clothLight);r(-10,-36,17,2,clothDark);}
     c.restore();
     return;
   } else if (!back) {

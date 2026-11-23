@@ -2,10 +2,16 @@
 export const SAVE_KEY = 'emberwake.save.v1';
 export const PALETTES = {
   skin: ['#f4d2ab', '#dfaa80', '#b97855', '#895337', '#603c30'],
-  hair: ['#51382e', '#a9683e', '#d1b779', '#292c32', '#b8bac0', '#a56b85'],
-  colour: ['#6f9479', '#ba775b', '#6f8ea0', '#ad8eaf', '#d4b16b', '#415c73'],
+  hair: ['#51382e', '#a9683e', '#d1b779', '#292c32', '#b8bac0', '#a56b85', '#d3a8c5', '#d7a18a'],
+  colour: ['#83a88b', '#c78378', '#83a9bb', '#b49ac2', '#dbb977', '#5c7c96', '#ddb3b3', '#acc8b3'],
 };
-export const STYLES = { hairStyle: ['Bob', 'Cropped', 'Long', 'Curly'], outfit: ['Overalls', 'Tunic', 'Dress'], accessory: ['None', 'Scarf', 'Sun hat'] };
+// Existing option indices stay stable so older saves retain their chosen look.
+export const STYLES = {
+  gender: ['Female', 'Male'],
+  hairStyle: ['Soft bob', 'Cropped', 'Long & sleek', 'Soft curls', 'Long waves', 'Side braid', 'Twin braids', 'Ponytail', 'Twin buns', 'Half-up waves', 'Pixie', 'High pigtails'],
+  outfit: ['Dungarees', 'Travel tunic', 'Linen dress', 'Pinafore', 'Cottage blouse', 'Petal dress', 'Cosy cardigan', 'Sailor dress'],
+  accessory: ['None', 'Scarf', 'Sun hat', 'Hair bow', 'Flower clip', 'Beret'],
+};
 export const FLOWERS = [{ id: 'f1', x: 400, y: 200 }, { id: 'f2', x: 480, y: 424 }, { id: 'f3', x: 200, y: 440 }];
 export const PLOTS = [{ x: 256, y: 344 }, { x: 280, y: 344 }, { x: 304, y: 344 }];
 export const QUESTS = [
@@ -15,7 +21,7 @@ export const QUESTS = [
   ['awakened', 'The dream beneath the hill', 'Bring your moonroot and starflowers to the shrine across the bridge.'],
 ];
 export function newState(appearance = {}) {
-  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 0, outfit: 0, accessory: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false };
+  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false };
 }
 export function validateSave(value) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 20) throw new Error('This is not an Emberwake save.');
@@ -30,7 +36,7 @@ export function validateSave(value) {
   s.direction = ['up', 'down', 'left', 'right'].includes(value.direction) ? value.direction : 'down';
   for (const key of ['metRowan', 'metMira', 'harvested', 'awakened']) s[key] = value[key] === true;
   for (const [key, options] of Object.entries({ ...PALETTES, ...STYLES })) {
-    const n = value.appearance?.[key];
+    const n = key === 'gender' && value.appearance?.gender === undefined ? 0 : value.appearance?.[key];
     if (!Number.isInteger(n) || n < 0 || n >= options.length) throw new Error('The saved appearance is invalid.');
     s.appearance[key] = n;
   }

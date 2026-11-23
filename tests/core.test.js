@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newState, validateSave, tend, isGrown, awaken, objective, FLOWERS, PLOTS } from '../core.js';
 import { blocked } from '../art.js';
+import { STYLES } from '../core.js';
 
 test('a full first chapter can be completed, saved and restored', () => {
   const s = newState();
@@ -42,6 +43,24 @@ test('save import drops unknown properties and never interprets character names 
   const restored = validateSave({...s, unexpected: 'discard me'});
   assert.equal(restored.name, '<b>Lina</b>');
   assert.equal('unexpected' in restored, false);
+});
+test('older saves gain a body choice without changing progress or existing appearance indices', () => {
+  const old = newState({ hairStyle: 2, outfit: 2, accessory: 1 });
+  delete old.appearance.gender;
+  old.day = 4; old.metRowan = true; old.flowers = ['f1'];
+  const restored = validateSave(JSON.parse(JSON.stringify(old)));
+  assert.equal(restored.appearance.gender, 0);
+  assert.equal(restored.appearance.hairStyle, 2);
+  assert.equal(restored.appearance.outfit, 2);
+  assert.equal(restored.day, 4);
+  assert.deepEqual(restored.flowers, ['f1']);
+});
+test('both body choices and all new wardrobe options survive save export and import', () => {
+  for(let gender=0;gender<2;gender++)for(let hairStyle=0;hairStyle<STYLES.hairStyle.length;hairStyle++)for(let outfit=0;outfit<STYLES.outfit.length;outfit++)for(let accessory=0;accessory<STYLES.accessory.length;accessory++) {
+    const s = newState({gender, hairStyle, outfit, accessory});
+    assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))),s);
+  }
+  assert.throws(()=>validateSave(newState({gender:2})));
 });
 test('every story interaction can be reached from spawn without crossing scenery', () => {
   const start = [272,278], step=4, queue=[start], visited=new Set([start.join(',')]);

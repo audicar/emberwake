@@ -8,6 +8,7 @@ let state = newState(), draft = { ...state.appearance }, started = false, editin
 let lastTime = 0, lastSave = 0, toastTimer, moving = false, soundContext, soundGain, soundEnabled = false;
 const keys = new Set(), camera = { x: 0, y: 0 };
 let saveProblem = '';
+let creatorSection = 'you', previewDirection = 'down';
 try { const saved = localStorage.getItem(SAVE_KEY); if (saved) { state = validateSave(JSON.parse(saved)); started = true; $('creator').hidden = true; } } catch { saveProblem = 'Your previous save could not be loaded. Begin a new story, or import a downloaded save from Menu afterwards.'; }
 draft = { ...state.appearance };
 
@@ -58,30 +59,72 @@ function openCreator(edit = false) {
   $('begin-button').textContent = edit ? 'Keep this look ✦' : 'Begin your quiet adventure ✦';
   $('cancel-creator').hidden = !edit; renderOptions(); openOverlay('creator');
 }
+function setCreatorSection(section) {
+  creatorSection = section;
+  document.querySelectorAll('[data-section]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.section === section)));
+  renderOptions();
+}
+function updateAppearance(key, index) {
+  draft[key] = index;
+  document.querySelectorAll(`[data-appearance="${key}"]`).forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.choice) === index)));
+  // A colour or body change also updates every hairstyle and clothing thumbnail.
+  document.querySelectorAll('#appearance-options canvas').forEach(canvas => drawChoice(canvas));
+  drawPortrait();
+}
+function drawChoice(canvas) {
+  const appearance = { ...draft, [canvas.dataset.key]: Number(canvas.dataset.index) };
+  const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height);
+  c.imageSmoothingEnabled = false;
+  drawCharacter(c, 24, canvas.dataset.key === 'hairStyle' ? 43 : 46, appearance);
+}
 function renderOptions() {
-  $('appearance-options').replaceChildren();
-  for (const [key, label] of [['skin','Skin tone'],['hair','Hair colour'],['hairStyle','Hairstyle'],['outfit','Clothes'],['colour','Cloth colour'],['accessory','Accessory']]) {
-    const row = document.createElement('div'); row.className = 'option-row';
-    const name = document.createElement('span'); name.className = 'option-label'; name.textContent = label; row.append(name);
-    const controls = document.createElement('div'); controls.setAttribute('role','group'); controls.setAttribute('aria-label',label);
-    if (PALETTES[key]) {
-      controls.className = 'swatches';
-      PALETTES[key].forEach((colour,i) => { const b=document.createElement('button');b.type='button';b.className='swatch';b.style.setProperty('--swatch',colour);b.setAttribute('aria-label',`${label} ${i+1}`);b.setAttribute('aria-pressed',String(draft[key]===i));b.onclick=()=>{draft[key]=i; controls.querySelectorAll('button').forEach((btn,j)=>btn.setAttribute('aria-pressed',String(i===j)));drawPortrait();};controls.append(b); });
-    } else {
-      controls.className = 'cycle';
-      const text=document.createElement('span');text.textContent=STYLES[key][draft[key]];text.setAttribute('aria-live','polite');
-      const makeButton=(offset,glyph)=>{const b=document.createElement('button');b.type='button';b.textContent=glyph;b.setAttribute('aria-label',`${offset<0?'Previous':'Next'} ${label.toLowerCase()}`);b.onclick=()=>{draft[key]=(draft[key]+offset+STYLES[key].length)%STYLES[key].length;text.textContent=STYLES[key][draft[key]];drawPortrait();};return b;};
-      controls.append(makeButton(-1,'‹'),text,makeButton(1,'›'));
-    }
-    row.append(controls);$('appearance-options').append(row);
+  const root = $('appearance-options'); root.replaceChildren();
+  const swatches = (key, label) => {
+    const row=document.createElement('div');row.className='option-row';
+    const name=document.createElement('span');name.className='option-label';name.textContent=label;
+    const choices=document.createElement('div');choices.className='swatches';choices.setAttribute('role','group');choices.setAttribute('aria-label',label);
+    PALETTES[key].forEach((colour,i)=>{const b=document.createElement('button');b.type='button';b.className='swatch';b.style.setProperty('--swatch',colour);b.dataset.appearance=key;b.dataset.choice=i;b.setAttribute('aria-label',`${label} ${i+1}`);b.setAttribute('aria-pressed',String(draft[key]===i));b.onclick=()=>updateAppearance(key,i);choices.append(b);});
+    row.append(name,choices);root.append(row);
+  };
+  const heading = (title, text) => {const h=document.createElement('h3');h.className='customise-heading';h.textContent=title;const p=document.createElement('p');p.className='customise-help';p.textContent=text;root.append(h,p);};
+  const cards = key => {
+    const grid=document.createElement('div');grid.className='choice-grid';grid.setAttribute('role','group');grid.setAttribute('aria-label',key==='hairStyle'?'Hairstyle':'Outfit');
+    STYLES[key].forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.className='choice-card';b.dataset.appearance=key;b.dataset.choice=i;b.setAttribute('aria-label',name);b.setAttribute('aria-pressed',String(draft[key]===i));
+      const canvas=document.createElement('canvas');canvas.width=48;canvas.height=key==='hairStyle'?32:52;canvas.dataset.key=key;canvas.dataset.index=i;canvas.setAttribute('aria-hidden','true');
+      const label=document.createElement('span');label.textContent=name;b.append(canvas,label);b.onclick=()=>updateAppearance(key,i);grid.append(b);drawChoice(canvas);
+    });root.append(grid);
+  };
+  if(creatorSection==='you'){
+    heading('A face for your story', 'Choose your character. Every hairstyle and outfit is yours to try.');
+    const gender=document.createElement('div');gender.className='gender-options';gender.setAttribute('role','group');gender.setAttribute('aria-label','Character gender');
+    STYLES.gender.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.dataset.appearance='gender';b.dataset.choice=i;b.setAttribute('aria-label',name);b.setAttribute('aria-pressed',String(draft.gender===i));const canvas=document.createElement('canvas');canvas.width=48;canvas.height=52;canvas.dataset.key='gender';canvas.dataset.index=i;canvas.setAttribute('aria-hidden','true');const label=document.createElement('span');label.textContent=name;b.append(canvas,label);b.onclick=()=>updateAppearance('gender',i);gender.append(b);drawChoice(canvas);});root.append(gender);
+    swatches('skin','Skin tone');
+  }else if(creatorSection==='hair'){
+    swatches('hair','Hair colour');heading('A little tousled, a little you', 'Braids, buns, soft waves — find your favourite.');cards('hairStyle');
+  }else{
+    swatches('colour','Cloth colour');cards('outfit');
+    const row=document.createElement('div');row.className='option-row';const label=document.createElement('span');label.className='option-label';label.textContent='Finishing touch';const choices=document.createElement('div');choices.className='accessory-options';choices.setAttribute('role','group');choices.setAttribute('aria-label','Accessory');
+    STYLES.accessory.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.dataset.appearance='accessory';b.dataset.choice=i;b.setAttribute('aria-label',name);b.setAttribute('aria-pressed',String(draft.accessory===i));b.onclick=()=>updateAppearance('accessory',i);choices.append(b);});row.append(label,choices);root.append(row);
   }
   drawPortrait();
 }
 function drawPortrait() {
-  portrait.clearRect(0,0,96,112);portrait.imageSmoothingEnabled=false;
-  portrait.fillStyle='#435c3d';portrait.fillRect(17,91,62,3);portrait.fillStyle='#759054';portrait.fillRect(24,89,49,2);
-  drawCharacter(portrait,48,91,draft,'down',0,2.5);
+  portrait.clearRect(0,0,128,160);portrait.imageSmoothingEnabled=false;
+  const r=(x,y,w,h,colour)=>{portrait.fillStyle=colour;portrait.fillRect(x,y,w,h);};
+  // A tiny spring garden behind the wardrobe preview, drawn on the same pixel grid.
+  r(0,0,128,160,'#b4c8ba');r(0,51,128,109,'#94ad88');
+  for(let i=0;i<8;i++){const x=i*19-12,y=38+(i%3)*4;r(x,y,28,30,'#7c9b7c');r(x+4,y-6,20,42,'#7c9b7c');r(x+3,y+10,17,5,'#88a584');}
+  r(0,83,128,77,'#9eaf82');r(0,84,128,2,'#c5cba0');
+  for(let x=2;x<128;x+=12){r(x,72,3,23,'#dfcfaa');r(x+1,71,1,1,'#f8e7c6');}r(0,78,128,3,'#e4d4b2');r(0,89,128,2,'#d1c098');
+  for(let y=101;y<160;y+=9)for(let x=3;x<128;x+=11){if((x+y)%3){r(x,y,2,1,'#b8c394');r(x+2,y-2,1,2,'#80966e');}}
+  r(35,132,58,3,'#768e6b');r(31,135,66,2,'#8da176');
+  for(const [x,y] of [[14,116],[111,119],[22,145],[103,147]]){r(x,y,1,5,'#728d66');r(x-1,y-2,3,3,'#f8e5d2');r(x,y-1,1,1,'#d8b279');}
+  drawCharacter(portrait,64,134,draft,previewDirection,0,3);
+  $('portrait-name').textContent=$('character-name').value.trim()||'Your character';
+  $('portrait-look').textContent=STYLES.outfit[draft.outfit];
 }
+$('creator-tabs').addEventListener('click',event=>{const b=event.target.closest('[data-section]');if(b)setCreatorSection(b.dataset.section);});
+document.querySelectorAll('[data-facing]').forEach(b=>b.onclick=()=>{previewDirection=b.dataset.facing;document.querySelectorAll('[data-facing]').forEach(button=>button.setAttribute('aria-pressed',String(button===b)));drawPortrait();});
 $('character-form').onsubmit = event => {
   event.preventDefault();const name=$('character-name').value.trim();
   if(!name){$('character-name').setCustomValidity('Give your character a name.');$('character-name').reportValidity();return;}
@@ -94,7 +137,7 @@ $('character-form').onsubmit = event => {
   ]);}
   refresh();
 };
-$('character-name').oninput=()=>$('character-name').setCustomValidity('');
+$('character-name').oninput=()=>{$('character-name').setCustomValidity('');drawPortrait();};
 $('cancel-creator').onclick=closeOverlays;
 function renderJournal() {
   $('journal-list').replaceChildren();

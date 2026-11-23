@@ -1,13 +1,13 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.1';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.1';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.1';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.1';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.1';
-import { drawWilds } from './wilds.js?v=0.5.1';
-import { BackgroundMusic } from './music.js?v=0.5.1';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.1';
-import { WORKSHOP, WorkshopSequence } from './workshop-script.js?v=0.5.1';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.1';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.2';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.2';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.2';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.2';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.2';
+import { drawWilds } from './wilds.js?v=0.5.2';
+import { BackgroundMusic } from './music.js?v=0.5.2';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.2';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.2';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.2';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -76,6 +76,14 @@ function renderWorkshopText() {
   $('workshop-text').textContent=beat.text;
   $('workshop-dialogue').classList.toggle('workshop-silent',beat.shot==='silence');
   $('workshop-canvas').parentElement.classList.toggle('workshop-wide',beat.shot==='establish');
+  const readingNotice=beat.shot==='notice';
+  $('workshop-notice').hidden=!readingNotice;
+  $('workshop-canvas').parentElement.classList.toggle('workshop-reading',readingNotice);
+  if(readingNotice) {
+    $('workshop-promotion-names').replaceChildren(...promotionNames(state.name).map(name=>{
+      const item=document.createElement('li');item.textContent=name;return item;
+    }));
+  }
   const hasPortrait=beat.speaker==='player'||beat.speaker==='Supervisor';
   $('workshop-portrait').hidden=!hasPortrait;
   $('workshop-dialogue').classList.toggle('has-workshop-portrait',hasPortrait);

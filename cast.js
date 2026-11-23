@@ -1,4 +1,4 @@
-import { drawCharacter } from './character.js?v=0.5.1';
+import { drawCharacter } from './character.js?v=0.5.2';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {
@@ -28,6 +28,7 @@ export function drawSpeakerPortrait(canvas, id) {
   for (const [x, y] of [[12, 16], [70, 25], [16, 53], [65, 66]]) {
     r(x, y, 2, 2, '#abc19555');
   }
+  c.save();c.beginPath();c.rect(4,4,76,80);c.clip();
   if (person.appearance) {
     // Crop at the shoulders; keep the full face, hair and headwear in frame.
     drawCharacter(c, 42, 134, person.appearance, 'down', 0, 3);
@@ -47,6 +48,7 @@ export function drawSpeakerPortrait(canvas, id) {
     r(32, 67, 20, 2, '#4c6851'); r(38, 33, 8, 5, '#b1bd92');
     r(20, 52, 4, 3, '#b1bd92'); r(60, 52, 4, 3, '#b1bd92');
   }
+  c.restore();
   canvas.setAttribute('aria-label', `Portrait of ${person.name}`);
   return true;
 }

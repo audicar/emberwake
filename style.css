@@ -223,7 +223,14 @@
 .workshop-header h2 { font-size: 25px; margin: 6px 0 0; color: #e4ddc2; }
 .workshop-tools { display: flex; align-items: center; gap: 12px; }
 .workshop-tools button { font-size: 11px; color: #c5ccb4; padding: 8px 10px; border: 1px solid #7f8d7044; }
-.workshop-stage { min-height: 0; overflow: hidden; background: #101c1e; border: 1px solid #9ba27d44; }
+.workshop-stage { position: relative; min-height: 0; overflow: hidden; background: #101c1e; border: 1px solid #9ba27d44; }
+.workshop-reading #workshop-canvas { filter: brightness(.5); }
+.workshop-notice { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(320px,calc(100% - 40px)); max-height: calc(100% - 28px); overflow: auto; padding: 28px 30px 24px; background: #f1e5c6; color: #303f32; border: 2px solid #b7a47b; box-shadow: 0 0 0 5px #6c6652,8px 8px 0 #0e1b1b66; font-family: Georgia,serif; }
+.workshop-notice:before { content: ''; position: absolute; top: 8px; left: calc(50% - 4px); width: 8px; height: 8px; background: #a47d53; border: 2px solid #795d40; }
+.workshop-notice > span { display: block; text-align: center; font: 11px/1.4 ui-monospace,monospace; letter-spacing: 2px; text-transform: uppercase; color: #62684f; }
+.workshop-notice h3 { margin: 12px 0 14px; padding-bottom: 14px; border-bottom: 2px solid #737a5e; text-align: center; font: bold 26px/1.2 Georgia,serif; letter-spacing: 1px; text-transform: uppercase; }
+.workshop-notice ul { list-style: none; padding: 0; margin: 0; }
+.workshop-notice li { padding: 11px 4px; border-bottom: 1px solid #b7b18f; font: 24px/1.3 Georgia,serif; }
 #workshop-canvas { width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: pixelated; }
 .workshop-dialogue { min-height: 128px; border: 1px solid #a5a88166; background: #263a33; padding: 22px 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; }
 .workshop-lines { align-self: flex-start; max-width: 780px; min-width: 0; flex: 1; }
@@ -256,6 +263,10 @@
   .workshop-footer { font-size: 8px; gap: 10px; }
 }
 @media (max-height: 520px) and (min-width: 601px) {
+  .workshop-notice { padding: 20px 24px 10px; }
+  .workshop-notice > span { font-size: 10px; line-height: 1.2; }
+  .workshop-notice h3 { font-size: 20px; margin: 4px 0 6px; padding-bottom: 4px; }
+  .workshop-notice li { font-size: 20px; line-height: 1.2; padding: 4px; }
   .workshop-overlay { padding: 8px 20px; }
   .workshop-shell { gap: 8px; }
   .workshop-header h2 { font-size: 19px; }

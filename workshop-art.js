@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.5.1';
-import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.1';
+import { drawCharacter } from './character.js?v=0.5.2';
+import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.2';
 
 const WIDTH=384,HEIGHT=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(x,y,w,h);};
@@ -7,7 +7,9 @@ let background,frame;
 export function drawWorkshopPortrait(canvas,appearance,name) {
   const c=canvas.getContext('2d');c.clearRect(0,0,84,88);c.imageSmoothingEnabled=false;
   r(c,0,0,84,88,'#7c8b70');r(c,2,2,80,84,'#293e36');r(c,6,6,72,76,'#60765e');r(c,6,60,72,22,'#7f8f6d');
+  c.save();c.beginPath();c.rect(6,6,72,76);c.clip();
   drawCharacter(c,42,134,appearance,'down',0,3);
+  c.restore();
   canvas.setAttribute('aria-label',`Portrait of ${name}`);
 }
 function paper(c,x,y,w,h) {
@@ -45,12 +47,14 @@ function coatRack(c,occupied) {
   for(const x of [314,329,344]){r(c,x,78,2,6,'#baa579');r(c,x-1,83,2,1,'#baa579');}
   if(occupied){r(c,324,85,12,18,'#476b67');r(c,321,88,4,10,'#547a70');r(c,335,88,4,10,'#547a70');r(c,328,85,4,3,'#c0bea0');}
 }
-function notice(c,state) {
+function notice(c,state,includeText=true) {
   r(c,118,22,70,55,'#303d39');r(c,120,23,66,51,'#706b50');r(c,123,26,60,45,'#9a9470');
   r(c,129,28,49,39,'#dfd4b4');r(c,131,30,45,1,'#f3e6c5');r(c,151,27,3,3,'#b58c61');
-  c.fillStyle='#525f50';c.font='bold 6px monospace';c.textAlign='left';c.fillText('PROMOTIONS',132,37);
-  r(c,132,40,42,1,'#b2ad8c');c.font='6px monospace';
-  promotionNames(state.name).forEach((name,i)=>{c.fillStyle='#5c6652';c.fillText(name,134,49+i*9);r(c,132,45+i*9,1,1,'#8a9677');});
+  if(includeText) {
+    c.fillStyle='#344034';c.font='bold 7px monospace';c.textAlign='left';c.fillText('PROMOTIONS',132,37);
+    r(c,132,40,42,1,'#b2ad8c');c.font='7px monospace';
+    promotionNames(state.name).forEach((name,i)=>{c.fillStyle='#3a4638';c.fillText(name,134,49+i*9);r(c,132,45+i*9,1,1,'#8a9677');});
+  }
   r(c,166,59,7,4,'#a9826c');r(c,168,60,3,2,'#c7a184');
 }
 function base() {
@@ -79,7 +83,7 @@ function base() {
 
 export function drawWorkshop(c,sequence,state,reducedMotion=false) {
   if(!frame){frame=document.createElement('canvas');frame.width=WIDTH;frame.height=HEIGHT;}
-  const f=frame.getContext('2d');f.imageSmoothingEnabled=false;f.clearRect(0,0,WIDTH,HEIGHT);f.drawImage(base(),0,0);notice(f,state);
+  const f=frame.getContext('2d');f.imageSmoothingEnabled=false;f.clearRect(0,0,WIDTH,HEIGHT);f.drawImage(base(),0,0);notice(f,state,sequence.beat.shot!=='notice');
   const beat=sequence.beat,t=reducedMotion?(beat.shot==='establish'?0:8):sequence.elapsed;
   let player={x:157,y:130,direction:'up',walk:0},boss={x:232,y:149,direction:'left',walk:0};
   let coworkers=[{x:125,y:124,direction:'up',walk:0},{x:191,y:126,direction:'up',walk:0}];

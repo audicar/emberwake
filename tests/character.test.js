@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newState, STYLES } from '../core.js';
 import { drawCharacter } from '../character.js';
+import { PALETTES } from '../core.js';
 
 // A tiny raster surface checks visible results, including transforms and overlap.
 function render(appearance, direction='down', step=0) {
@@ -31,4 +32,22 @@ test('hairstyles, garments, accessories and body choices have visibly distinct p
     assert.equal(new Set(fingerprints).size,STYLES[key].length,`${key} options must look different; duplicates: ${duplicates.join(', ')}`);
   }
   const back=render(base,'up');assert.notDeepEqual(back,render(base,'down'));
+});
+test('profile hair leaves the visible eye and nose clear for every style and accessory', () => {
+  for(let gender=0;gender<2;gender++)for(let hairStyle=0;hairStyle<STYLES.hairStyle.length;hairStyle++)for(let accessory=0;accessory<STYLES.accessory.length;accessory++) {
+    const a=newState({gender,hairStyle,accessory}).appearance;
+    for(const direction of ['right','left']) {
+      const pixels=new Map(render(a,direction));
+      const x=rightX=>direction==='right'?rightX:-rightX-1;
+      assert.equal(pixels.get(`${x(4)},-27`),'#3b3542',`${STYLES.hairStyle[hairStyle]} must leave the ${direction} eye visible`);
+      assert.equal(pixels.get(`${x(7)},-24`),PALETTES.skin[a.skin],`${STYLES.hairStyle[hairStyle]} must leave the ${direction} nose clear`);
+    }
+  }
+});
+test('left-facing hairstyles are exact reflections of their right-facing profiles', () => {
+  for(let hairStyle=0;hairStyle<STYLES.hairStyle.length;hairStyle++)for(let accessory=0;accessory<STYLES.accessory.length;accessory++) {
+    const a=newState({hairStyle,accessory}).appearance;
+    const reflected=render(a,'right').map(([key,colour])=>{const [x,y]=key.split(',').map(Number);return [`${-x-1},${y}`,colour];}).sort(([a],[b])=>a.localeCompare(b));
+    assert.deepEqual(render(a,'left'),reflected);
+  }
 });

@@ -1,0 +1,9 @@
+{
+  "name": "emberwake",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A little life beside a sleeping dragon. A dependency-free browser game.",
+  "scripts": { "test": "node --test tests/*.test.js", "dev": "python3 -m http.server 4173 --bind 127.0.0.1" },
+  "engines": { "node": ">=20" }
+}

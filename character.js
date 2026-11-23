@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.5.5';
+import { PALETTES } from './core.js?v=0.5.6';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
@@ -119,6 +119,25 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     if (style===8) {lock(-14,-39,8,8);r(-12,-40,5,6,hair);r(-12,-38,4,1,hairLight);r(-12,-32,5,2,cloth);lock(-7,-41,5,5);}
     if (style===9) {r(-8,-30,4,2,cloth);r(-8,-28,1,3,hairShine);}
     if (style===10) {r(0,-32,3,2,hair);r(1,-30,2,1,hair);r(-2,-32,3,1,hairLight);}
+
+    // A one-pixel overhang lifts the fringe away from the forehead. The near
+    // temple locks sit in front of the ear, as they do in the front-facing art.
+    r(5,-33,2,3,hair);r(6,-30,1,1,hair);
+    if ([0,2,4,5,6,7,9].includes(style)) {
+      const length=style===0?9:[2,4,9].includes(style)?10:8;
+      r(-3,-30,4,length-1,hairDark);r(-2,-30,3,length-2,hair);
+      r(-2,-29,1,length-4,hairLight);
+      r(-2,-32+length,3,2,hair);r(-1,-30+length,2,1,hair);
+      if ([4,9].includes(style)) {r(0,-26,2,3,hair);r(0,-25,1,2,hairLight);}
+    } else if (style===3) {
+      r(-3,-30,4,5,hairDark);r(-2,-30,3,4,hair);r(-2,-29,1,2,hairLight);
+      r(-2,-26,4,4,hairDark);r(-1,-26,3,3,hair);r(-1,-25,1,1,hairLight);
+      r(-1,-22,2,1,hair);
+    } else {
+      const length=style===1?3:style===10?5:7;
+      r(-3,-30,3,length,hair);r(-3,-29,1,Math.max(1,length-2),hairLight);
+      r(-2,-30+length,2,1,hair);
+    }
 
     // Accessories follow the same profile plane, with the scarf below the chin.
     if(a.accessory===1){r(-3,-20,7,2,'#e5b889');r(2,-18,2,6,'#e5b889');r(3,-18,1,5,'#f8d8a6');}

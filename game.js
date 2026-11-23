@@ -1,13 +1,13 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.5';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.5';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.5';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.5';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.5';
-import { drawWilds } from './wilds.js?v=0.5.5';
-import { BackgroundMusic } from './music.js?v=0.5.5';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.5';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.5';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.5';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.6';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.6';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.6';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.6';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.6';
+import { drawWilds } from './wilds.js?v=0.5.6';
+import { BackgroundMusic } from './music.js?v=0.5.6';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.6';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.6';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.6';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');

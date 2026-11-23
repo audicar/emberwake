@@ -19,7 +19,7 @@ export const QUESTS = [
   ['metRowan', 'A neighbourly hello', 'Find Rowan beside the garden, just south of the village square.', 'main'],
   ['harvested', 'Something worth tending', 'Plant and water a moonroot. Go inside your cottage, sleep in the bed, then harvest it.', 'main'],
   ['flowers', 'A handful of starlight', 'Gather three starflowers around the village and meadow. M marks the ones still growing.', 'main'],
-  ['awakened', 'The dream beneath the hill', 'Bring your moonroot and starflowers to the shrine across the bridge.', 'main'],
+  ['awakened', 'The dream beneath the hill', 'Rowan told you Aunt Wren used to take three starflowers to the old shrine. She said the hill slept easier afterwards. Bring 1 moonroot and 3 starflowers east across the wooden bridge. Press E beside the shrine to place them in the offering bowl.', 'main'],
   ['dragonBonded', 'A cry in the trees', 'Take the southern trail into Briarwood and help the stranded hatchling.', 'main'],
   ['guardianFreed', 'The thornbound guardian', 'Clear the bramble sprites, break the guardian’s binding, then approach it with E.', 'main'],
   ['homecoming', 'A place for two', 'Bring your hatchling home to the cottage.', 'main'],

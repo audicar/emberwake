@@ -8,12 +8,13 @@ A little life beside a sleeping dragon. A small, single-player browser game abou
 
 Make a home in a small village beneath a sleeping mountain. Grow a garden, get to know your neighbours, and explore paths where old stories are beginning to stir. Build a bond with dragons in a gentle fantasy adventure about kindness, belonging and finding your courage.
 
-This free, single-player prototype currently offers roughly ten minutes of play, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
+This free, single-player prototype currently offers roughly ten minutes of play, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Your chosen character also appears in a short opening scene. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
 
 ## Controls
 
 | Action | Control |
 | --- | --- |
+| Opening dialogue | E, Space, Enter or Continue; Escape to skip |
 | Move | Arrow keys or WASD |
 | Talk, gather, plant, water, harvest | E, Space or Enter |
 | Inventory | I |
@@ -27,7 +28,7 @@ This free, single-player prototype currently offers roughly ten minutes of play,
 
 Inventory, journal and map can also be opened from the toolbar. Press the same key again or Escape to close; I, J and M switch directly between these screens. The map shows landmarks and your current position, with gathering locations marked during the relevant quest. The inventory includes item quantities and descriptions, plus a shortcut to the wardrobe. These screens pause movement and the in-game clock.
 
-The in-game day advances slowly and stops before midnight. There is no forced bedtime or penalty. Press E at the front door of your red-roofed cottage, north-west of the square, to enter its furnished interior. Approach the bed from either side or the foot and press E to sleep. New stories begin inside the cottage. The tall wardrobe stands in the north-west corner, books sit along the west wall, and the kitchen counter and dining table have their own clear spaces.
+The in-game day advances slowly and stops before midnight. There is no forced bedtime or penalty. Press E at the front door of your red-roofed cottage, north-west of the square, to enter its furnished interior. Approach the bed from either side or the foot and press E to sleep. New stories begin with character creation and a short, skippable opening scene before arriving at the cottage. The opening resumes at the current line if you reload; existing saves continue normally. The tall wardrobe stands in the north-west corner, books sit along the west wall, and the kitchen counter and dining table have their own clear spaces.
 
 ## Run locally
 
@@ -67,6 +68,7 @@ The repository is a static site published from `main` at the repository root, wi
 - `wilds.js`, `dragon.js`: woodland scenery and dragon sprites.
 - `home.js`: cottage interior, furniture interactions and collision geometry.
 - `music.js`: original musical themes and the Web Audio scheduler.
+- `workshop-script.js`, `workshop-art.js`: isolated opening sequence and pixel scenery.
 - `inventory.js`: item definitions, quantities derived from save data, and pixel icons.
 - `game.js`: browser input, interface, persistence, dialogue, audio and render loop.
 - `style.css`, `index.html`: responsive game screen and modal panels.
@@ -76,5 +78,6 @@ The repository is a static site published from `main` at the repository root, wi
 - `tests/combat.test.js`: attack direction, dodging, cooldowns, encounter progression and old-save compatibility.
 - `tests/music.test.js`: musical data and audio scheduling lifecycle.
 - `tests/story.test.js`: sequential main quests and reachable cottage interactions.
+- `tests/workshop.test.js`: opening progression, skipping, save compatibility and character-name handling.
 
 The title is a working name. This game uses original art, writing and code; it contains no assets or characters from its inspirations.

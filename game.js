@@ -1,15 +1,17 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.5';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.5';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.5';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.5';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.5';
-import { drawWilds } from './wilds.js?v=0.4.5';
-import { BackgroundMusic } from './music.js?v=0.4.5';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.5';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.0';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.0';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.0';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.0';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.0';
+import { drawWilds } from './wilds.js?v=0.5.0';
+import { BackgroundMusic } from './music.js?v=0.5.0';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.0';
+import { WORKSHOP, WorkshopSequence } from './workshop-script.js?v=0.5.0';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.0';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
-const overlays = ['creator', 'inventory', 'journal', 'map', 'menu'];
+const overlays = ['creator', 'inventory', 'journal', 'map', 'menu', 'workshop'];
 const panelShortcuts = { i: 'inventory', j: 'journal', m: 'map' };
 let selectedInventoryItem = 'seeds';
 let state = newState(), draft = { ...state.appearance }, started = false, editing = false, dialogue = null, nextAction = null, previousFocus = null;
@@ -23,6 +25,9 @@ try { const saved = localStorage.getItem(SAVE_KEY); if (saved) { state = validat
 draft = { ...state.appearance };
 let encounter = null;
 let homeActor = state.insideHome ? { ...HOME_ENTRY, direction: 'up', walk: 0 } : null;
+let workshop = null;
+const workshopContext=$('workshop-canvas').getContext('2d');
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let villageCompanion = { x: state.x - 18, y: state.y + 12 };
 
 function isPaused() { return overlays.some(id => !$(id).hidden) || !!dialogue; }
@@ -38,7 +43,7 @@ function refresh() {
   const minutes = Math.floor(state.minutes / 10) * 10;
   $('clock').textContent = `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
   $('objective').textContent = homeActor ? !state.metRowan ? 'Make yourself at home. Rowan is waiting outside.' : 'Your bed is on the east side of the cottage.' : encounter ? encounter.objective() : objective(state);
-  music.setTheme(encounter ? encounter.guardianAwake && encounter.guardian.hp > 0 && !state.guardianFreed ? 'guardian' : 'woods' : 'village');
+  music.setTheme(workshop ? 'workshop' : encounter ? encounter.guardianAwake && encounter.guardian.hp > 0 && !state.guardianFreed ? 'guardian' : 'woods' : 'village');
   $('place-name').textContent = homeActor ? 'Your cottage' : encounter ? 'Briarwood' : 'Hearthvale';
   $('place-description').textContent = homeActor ? 'Warm light and a quilt by the window.' : encounter ? 'A narrow path beneath old trees.' : 'Where the hills breathe in their sleep.';
   $('combat-hud').hidden = !encounter;
@@ -63,6 +68,50 @@ function returnHome(defeated = false) {
   if(defeated) say('rowan', ['Your little friend wouldn’t leave the path until I helped you home. There’s tea on the table. Rest a while; the woods will keep.']);
   else toast('Back in Hearthvale. Your garden has been waiting.');
 }
+function renderWorkshopText() {
+  const beat=workshop.beat;
+  $('workshop-title').textContent=WORKSHOP.title;
+  $('workshop-setting').textContent=WORKSHOP.setting;
+  $('workshop-speaker').textContent=beat.speaker==='player'?state.name:beat.speaker;
+  $('workshop-text').textContent=beat.text;
+  $('workshop-dialogue').classList.toggle('workshop-silent',beat.shot==='silence');
+  const hasPortrait=beat.speaker==='player'||beat.speaker==='Supervisor';
+  $('workshop-portrait').hidden=!hasPortrait;
+  $('workshop-dialogue').classList.toggle('has-workshop-portrait',hasPortrait);
+  if(hasPortrait)drawWorkshopPortrait($('workshop-portrait'),beat.speaker==='player'?state.appearance:WORKSHOP.supervisor,beat.speaker==='player'?state.name:'the supervisor');
+  $('workshop-description').textContent=beat.description||'';
+  $('workshop-canvas').setAttribute('aria-label',beat.shot==='notice'?'The workshop noticeboard. Your character reads a list of appointments.':beat.shot==='silence'?'Your character pauses while the supervisor walks away, then returns to the unfinished order.':'Your character speaks with the supervisor beside a workbench of completed orders.');
+  updateWorkshopButton();
+}
+function updateWorkshopButton() {
+  if(!workshop)return;
+  const button=$('workshop-next'),ready=workshop.ready;
+  if(button.disabled!==!ready)button.disabled=!ready;
+  const label=!ready?'A moment…':workshop.step===WORKSHOP.steps.length-1?'Continue to Hearthvale':'Continue';
+  if(button.textContent!==label)button.textContent=label;
+}
+function startWorkshop(step=0) {
+  workshop=new WorkshopSequence(step);state.workshopStep=step;dialogue=null;nextAction=null;$('dialogue').hidden=true;
+  homeActor=null;keys.clear();openOverlay('workshop');$('game').inert=true;
+  renderWorkshopText();refresh();save();$('workshop-next').focus();
+}
+function finishWorkshop() {
+  if(!workshop)return;
+  workshop=null;state.workshopStep=null;state.insideHome=true;homeActor={...HOME_START,direction:'left',walk:0};
+  $('game').inert=false;closeOverlays();refresh();save();
+  say('Some days later · Aunt Wren’s letter',[
+    'My love, you sounded tired in your last letter. Come spend the spring in Hearthvale. I’ll be travelling, and your old room is ready.',
+    'You don’t need to know what comes next before you get here.',
+    'Your cup’s by the kettle. With love, Aunt Wren',
+  ],null,'Make yourself at home');
+}
+function advanceWorkshop() {
+  if(!workshop||!workshop.advance())return;
+  if(workshop.finished)return finishWorkshop();
+  state.workshopStep=workshop.step;renderWorkshopText();save();
+}
+$('workshop-next').onclick=advanceWorkshop;
+$('workshop-skip').onclick=()=>{if(workshop){workshop.skip();finishWorkshop();}};
 function startExpedition() {
   state.hasBlade = true; homeActor = null; state.insideHome=false;
   encounter = new WoodlandEncounter(state, { toast, say, changed: () => { refresh(); save(); }, home: returnHome });
@@ -109,7 +158,7 @@ function openOverlay(id) {
   if (id === 'inventory') renderInventory();
   if (id === 'map') renderMap();
   if (id === 'menu') { $('leave-woods').hidden=!encounter; $('woods-button').hidden=!!encounter; $('woods-button').disabled=!state.awakened; }
-  requestAnimationFrame(() => $(id).querySelector('button,input')?.focus());
+  requestAnimationFrame(() => (id==='workshop'?$('workshop-next'):$(id).querySelector('button,input'))?.focus());
 }
 function closeOverlays() {
   if (!started) return;
@@ -283,11 +332,7 @@ $('character-form').onsubmit = event => {
   if(!name){$('character-name').setCustomValidity('Give your character a name.');$('character-name').reportValidity();return;}
   $('character-name').setCustomValidity('');
   if(editing){state.name=name;state.appearance={...draft};closeOverlays();save();toast('A fresh look. Still very much you.');}
-  else {state=newState(draft);state.x=160;state.y=243;state.insideHome=true;encounter=null;homeActor={...HOME_START,direction:'left',walk:0};villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();save();say('A letter left on the kitchen table',[
-    `${name}, the cottage is yours. I put your old cup back by the kettle and mended the quilt. My friend’s nephew, Rowan, has offered to help with the garden. You’ll find him just south of the square.`,
-    'One small thing: if you hear the mountain dreaming, don’t be frightened. It has been waiting a very long time for someone who can listen.',
-    'For now, just find your feet. Rowan is by the garden, a little south of the square. — With love, Aunt Wren',
-  ],null,'Make yourself at home');}
+  else {state=newState(draft);state.x=160;state.y=243;state.insideHome=true;encounter=null;homeActor=null;villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();startWorkshop();}
   refresh();
 };
 $('character-name').oninput=()=>{$('character-name').setCustomValidity('');drawPortrait();};
@@ -370,11 +415,11 @@ $('inventory-wardrobe').onclick = () => openCreator(true);
 $('woods-button').onclick = offerExpedition;
 $('leave-woods').onclick = () => encounter?.leave(false);
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeOverlays);
-overlays.forEach(id=>$(id).addEventListener('click',event=>{if(event.target===$(id)&&id!=='creator')closeOverlays();}));
+overlays.forEach(id=>$(id).addEventListener('click',event=>{if(event.target===$(id)&&!['creator','workshop'].includes(id))closeOverlays();}));
 $('wardrobe').onclick=()=>openCreator(true);
 $('save-button').onclick=()=>{$('menu-status').textContent=save()?'Progress saved on this device.':'Browser storage is unavailable. Download your save instead.';};
 $('export-save').onclick=()=>{const {walk,...data}=state;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`emberwake-day-${state.day}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('menu-status').textContent='Save downloaded. Keep it somewhere safe.';};
-$('import-save').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>30000)throw new Error('That file is too large to be a game save.');const incoming=validateSave(JSON.parse(await file.text()));if(!confirm('Replace the current story with this save? Download your current save first if you want to keep it.'))return;state=incoming;encounter=null;homeActor=state.insideHome?{...HOME_ENTRY,direction:'up',walk:0}:null;villageCompanion={x:state.x-18,y:state.y+12};started=true;closeOverlays();save();refresh();toast('Your story, right where you left it.');}catch(error){$('menu-status').textContent=error instanceof SyntaxError?'This file is not valid JSON.':error.message;}finally{event.target.value='';}};
+$('import-save').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>30000)throw new Error('That file is too large to be a game save.');const incoming=validateSave(JSON.parse(await file.text()));if(!confirm('Replace the current story with this save? Download your current save first if you want to keep it.'))return;state=incoming;encounter=null;homeActor=state.insideHome?{...HOME_ENTRY,direction:'up',walk:0}:null;villageCompanion={x:state.x-18,y:state.y+12};started=true;closeOverlays();save();refresh();if(state.workshopStep!==null)startWorkshop(state.workshopStep);else toast('Your story, right where you left it.');}catch(error){$('menu-status').textContent=error instanceof SyntaxError?'This file is not valid JSON.':error.message;}finally{event.target.value='';}};
 $('restart').onclick=()=>{if(!confirm('Start a new story? Your current local save will be replaced when you begin. Download it first if you want to keep it.'))return;openCreator(false);};
 
 async function toggleSound() {
@@ -382,6 +427,8 @@ async function toggleSound() {
     const enabled = await music.toggle();
     $('sound').setAttribute('aria-pressed', String(enabled));
     $('sound').textContent = enabled ? 'Music on' : 'Music off';
+    $('workshop-sound').setAttribute('aria-pressed',String(enabled));
+    $('workshop-sound').textContent=enabled?'Music on':'Music off';
   } catch { toast('Background music is unavailable in this browser.'); }
 }
 $('music-volume').value = Math.round(music.volume * 100);
@@ -392,14 +439,23 @@ $('music-volume').oninput = event => {
   try { localStorage.setItem('emberwake.music.volume', String(music.volume)); } catch {}
 };
 $('sound').onclick=toggleSound;
+$('workshop-sound').onclick=toggleSound;
 const directionKeys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
 window.addEventListener('keydown',event=>{
   if (event.metaKey || event.ctrlKey || event.altKey) return;
   // Keep focus within open modal panels without interfering with name entry.
   const active=overlays.find(id=>!$(id).hidden);
-  if(event.key==='Tab'&&active){const focusables=[...$(active).querySelectorAll('button:not([hidden]),input:not([type=file])')].filter(e=>e.getClientRects().length);const first=focusables[0],last=focusables.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}return;}
+  if(event.key==='Tab'&&active){const focusables=[...$(active).querySelectorAll('button:not([hidden]),input:not([type=file])')].filter(e=>!e.disabled&&e.getClientRects().length);const first=focusables[0],last=focusables.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}return;}
   if(event.target instanceof HTMLInputElement){if(event.key==='Escape'&&active&&(active!=='creator'||editing)){event.preventDefault();closeOverlays();}return;}
   const key=event.key.length===1?event.key.toLowerCase():event.key;
+  if(workshop) {
+    if(key==='Escape'){event.preventDefault();if(!event.repeat){workshop.skip();finishWorkshop();}return;}
+    if(['e',' ','Enter'].includes(key)) {
+      if(key!=='e'&&event.target instanceof HTMLButtonElement&&event.target.id!=='workshop-next')return;
+      event.preventDefault();if(!event.repeat)advanceWorkshop();
+    }
+    return;
+  }
   if(key==='Escape'){event.preventDefault();keys.clear();if(dialogue){dialogue=null;nextAction=null;$('dialogue').hidden=true;refresh();save();world.focus();}else if(active)closeOverlays();else if(started)openOverlay('menu');return;}
   if (panelShortcuts[key] && started && !dialogue && active !== 'creator') {
     event.preventDefault(); if (!event.repeat) togglePanel(panelShortcuts[key]); return;
@@ -427,6 +483,10 @@ function resize(){const box=$('landscape').getBoundingClientRect();const zoom=Ma
 window.addEventListener('resize',resize);resize();
 function tick(time){
   const dt=Math.min((time-lastTime)/1000||0,.05);lastTime=time;
+  if(workshop){
+    if(!document.hidden){workshop.update(dt);updateWorkshopButton();drawWorkshop(workshopContext,workshop,state,reducedMotion);}
+    requestAnimationFrame(tick);return;
+  }
   moving=false;
   if(started&&!isPaused()&&!document.hidden){
     if(encounter) {
@@ -463,4 +523,5 @@ function tick(time){
 if(blocked(state.x,state.y)){state.x=272;state.y=278;}
 renderOptions();refresh();requestAnimationFrame(tick);
 if(saveProblem){toast(saveProblem);$('save-status').textContent='Previous save could not be loaded';}
-if(started){world.focus();toast(`Welcome back, ${state.name}. The kettle’s still warm.`);}else $('character-name').focus();
+if(started&&state.workshopStep!==null)startWorkshop(state.workshopStep);
+else if(started){world.focus();toast(`Welcome back, ${state.name}. The kettle’s still warm.`);}else $('character-name').focus();

@@ -1,6 +1,11 @@
 // Original eight-bar themes, synthesised locally. Each number is a MIDI pitch;
 // null leaves room between phrases. No audio files or network requests are used.
 export const THEMES = {
+  workshop: {
+    bpm: 64,
+    chords: [[40,43,47],[48,52,55],[45,48,52],[47,50,54]],
+    melody: [71,null,null,67,null,64,null,null, 67,null,64,null,null,62,null,null, 69,null,null,67,null,64,null,null, 66,null,62,null,null,null,null,null, 71,null,74,null,null,71,67,null, 72,null,null,67,null,64,null,null, 69,null,67,null,null,64,null,null, 66,null,62,null,null,null,64,null],
+  },
   village: {
     bpm: 78,
     chords: [[43,47,50],[40,43,47],[48,52,55],[50,54,57]],

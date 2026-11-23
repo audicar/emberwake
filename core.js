@@ -33,7 +33,7 @@ export function completedMainQuests(state) {
   return completed;
 }
 export function newState(appearance = {}) {
-  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, insideHome: false, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, guardianFreed: false, homecoming: false };
+  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, insideHome: false, workshopStep: null, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, guardianFreed: false, homecoming: false };
 }
 export function validateSave(value) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 20) throw new Error('This is not an Emberwake save.');
@@ -57,6 +57,10 @@ export function validateSave(value) {
     s[key] = value[key] === true;
   }
   if (s.homecoming && !s.guardianFreed) throw new Error('The saved homecoming is invalid.');
+  if(value.workshopStep!==undefined&&value.workshopStep!==null) {
+    if(!Number.isInteger(value.workshopStep)||value.workshopStep<0||value.workshopStep>5)throw new Error('The saved opening scene is invalid.');
+    s.workshopStep=value.workshopStep;
+  }
   if (s.guardianFreed && !s.dragonBonded) throw new Error('The saved dragon bond is invalid.');
   if (!Array.isArray(value.flowers) || value.flowers.some(id => !FLOWERS.some(f => f.id === id)) || new Set(value.flowers).size !== value.flowers.length) throw new Error('The saved flowers are invalid.');
   s.flowers = [...value.flowers];

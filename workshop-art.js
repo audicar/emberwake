@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.5.0';
-import { WORKSHOP, appointmentNames } from './workshop-script.js?v=0.5.0';
+import { drawCharacter } from './character.js?v=0.5.1';
+import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.1';
 
 const WIDTH=384,HEIGHT=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(x,y,w,h);};
@@ -35,12 +35,22 @@ function desk(c) {
   r(c,270,129,31,10,'#69755e');r(c,314,129,30,10,'#69755e');r(c,283,133,5,1,'#c3b17c');r(c,326,133,5,1,'#c3b17c');
   paper(c,273,114,22,11);paper(c,301,112,18,13);lamp(c,339,115);
 }
+function sharedBench(c) {
+  r(c,26,131,4,22,'#3d493e');r(c,74,131,4,22,'#3d493e');
+  r(c,23,126,58,10,'#535f4c');r(c,21,122,62,5,'#a1a17c');
+  paper(c,29,117,17,8);r(c,56,121,17,2,'#6f7056');r(c,66,117,2,6,'#c3b28a');
+}
+function coatRack(c,occupied) {
+  r(c,308,78,44,3,'#8e9372');
+  for(const x of [314,329,344]){r(c,x,78,2,6,'#baa579');r(c,x-1,83,2,1,'#baa579');}
+  if(occupied){r(c,324,85,12,18,'#476b67');r(c,321,88,4,10,'#547a70');r(c,335,88,4,10,'#547a70');r(c,328,85,4,3,'#c0bea0');}
+}
 function notice(c,state) {
   r(c,118,22,70,55,'#303d39');r(c,120,23,66,51,'#706b50');r(c,123,26,60,45,'#9a9470');
   r(c,129,28,49,39,'#dfd4b4');r(c,131,30,45,1,'#f3e6c5');r(c,151,27,3,3,'#b58c61');
-  c.fillStyle='#525f50';c.font='bold 5px monospace';c.textAlign='left';c.fillText('APPOINTMENTS',132,37);
+  c.fillStyle='#525f50';c.font='bold 6px monospace';c.textAlign='left';c.fillText('PROMOTIONS',132,37);
   r(c,132,40,42,1,'#b2ad8c');c.font='6px monospace';
-  appointmentNames(state.name).forEach((name,i)=>{c.fillStyle='#5c6652';c.fillText(name,134,49+i*9);r(c,132,45+i*9,1,1,'#8a9677');});
+  promotionNames(state.name).forEach((name,i)=>{c.fillStyle='#5c6652';c.fillText(name,134,49+i*9);r(c,132,45+i*9,1,1,'#8a9677');});
   r(c,166,59,7,4,'#a9826c');r(c,168,60,3,2,'#c7a184');
 }
 function base() {
@@ -48,7 +58,9 @@ function base() {
   background=document.createElement('canvas');background.width=WIDTH;background.height=HEIGHT;const c=background.getContext('2d');
   r(c,0,0,WIDTH,HEIGHT,'#202e2e');r(c,8,9,368,197,'#303e3e');r(c,14,14,356,70,'#5d6b68');
   r(c,14,16,356,3,'#77817a');r(c,14,77,356,8,'#424f49');r(c,14,85,356,116,'#747963');
+  c.save();c.beginPath();c.rect(14,85,356,116);c.clip();
   for(let y=86;y<201;y+=14){r(c,15,y,354,1,'#596453');for(let x=20+(y%28?0:26);x<367;x+=52){r(c,x,y+1,1,12,'#636d58');r(c,x+4,y+3,23,1,'#858a6e');}}
+  c.restore();
   r(c,11,80,5,123,'#394940');r(c,368,80,5,123,'#394940');r(c,13,199,358,5,'#414d42');
   // Late daylight enters from one side, leaving a workmanlike, quiet room.
   r(c,29,25,65,48,'#3b4a46');r(c,33,28,57,40,'#aeaa84');r(c,36,30,51,34,'#b8b696');
@@ -68,23 +80,37 @@ function base() {
 export function drawWorkshop(c,sequence,state,reducedMotion=false) {
   if(!frame){frame=document.createElement('canvas');frame.width=WIDTH;frame.height=HEIGHT;}
   const f=frame.getContext('2d');f.imageSmoothingEnabled=false;f.clearRect(0,0,WIDTH,HEIGHT);f.drawImage(base(),0,0);notice(f,state);
-  const beat=sequence.beat,t=reducedMotion?8:sequence.elapsed;
+  const beat=sequence.beat,t=reducedMotion?(beat.shot==='establish'?0:8):sequence.elapsed;
   let player={x:157,y:130,direction:'up',walk:0},boss={x:232,y:149,direction:'left',walk:0};
-  if(beat.shot!=='notice')player={x:167,y:151,direction:'right',walk:0};
+  let coworkers=[{x:125,y:124,direction:'up',walk:0},{x:191,y:126,direction:'up',walk:0}];
+  if(beat.shot==='establish') {
+    // Coworkers pack up and gather at the notice; the MC finishes an order,
+    // then walks over. The supervisor remains at a separate desk.
+    const walk=Math.min(1,Math.max(0,(t-2.8)/1.8));
+    player={x:159-walk*2,y:159-walk*29,direction:t<2.8?'down':'up',walk:walk>0&&walk<1?t*8:0};
+    boss={x:292,y:132,direction:'down',walk:0};
+    const a=Math.min(1,Math.max(0,(t-1.4)/2.2)),b=Math.min(1,Math.max(0,(t-1.5)/2.7));
+    coworkers=[{x:52+a*73,y:133-a*9,direction:a===0?'down':a<1?'right':'up',walk:a>0&&a<1?t*8:0},{x:319-b*128,y:117+b*9,direction:b===0?'up':b<1?'left':'up',walk:b>0&&b<1?t*8:0}];
+  } else if(beat.shot!=='notice')player={x:167,y:151,direction:'right',walk:0};
+  coatRack(f,beat.shot==='establish'&&t<1.1);
+  coworkers.forEach((actor,i)=>{
+    drawCharacter(f,actor.x,actor.y,WORKSHOP.staff[i],actor.direction,actor.walk);
+    if(i===1&&(beat.shot!=='establish'||t>1.1)){r(f,actor.x-1,actor.y-13,7,7,'#476b67');r(f,actor.x,actor.y-13,5,2,'#9cad94');}
+  });
   if(beat.shot==='request')boss.direction=t>.7?'right':'left';
   if(beat.shot==='silence') {
     const walk=Math.min(1,Math.max(0,(t-1.3)/1.1));
     player={x:167-walk*8,y:151+walk*8,direction:t<1.3?'right':t<2.4?'left':'down',walk:walk>0&&walk<1?t*10:0};
-    const away=Math.min(1,t/1.6);boss={x:232+away*57,y:149-away*5,direction:'right',walk:away<1?t*8:0};
+    const away=Math.min(1,t/1.6);boss={x:232+away*57,y:149-away*17,direction:away<1?'right':'down',walk:away<1?t*8:0};
   }
   drawCharacter(f,boss.x,boss.y,WORKSHOP.supervisor,boss.direction,boss.walk);
   drawCharacter(f,player.x,player.y,state.appearance,player.direction,player.walk);
-  desk(f);workbench(f);
-  if(beat.shot==='silence'&&t>2.5) {
+  sharedBench(f);desk(f);workbench(f);
+  if((beat.shot==='silence'&&t>2.5)||(beat.shot==='establish'&&t<2.8)) {
     // The small movement of a tool is the only reply to the final request.
-    r(f,153,143,1,3,'#d0b59c');r(f,155,146,7,1,'#cbb888');
+    r(f,155+Math.floor(t*6)%2,146,7,1,'#cbb888');
   }
-  const shots={notice:{x:153,y:88,zoom:1.75},conversation:{x:202,y:126,zoom:1.65},request:{x:202,y:126,zoom:1.65},silence:{x:191,y:134,zoom:1.8}};
+  const shots={establish:{x:192,y:108,zoom:1},notice:{x:153,y:88,zoom:1.75},conversation:{x:202,y:126,zoom:1.65},request:{x:202,y:126,zoom:1.65},silence:{x:191,y:134,zoom:1.8}};
   const camera=shots[beat.shot],sw=Math.round(WIDTH/camera.zoom),sh=Math.round(HEIGHT/camera.zoom),sx=Math.round(camera.x-sw/2),sy=Math.round(camera.y-sh/2);
   c.imageSmoothingEnabled=false;c.clearRect(0,0,c.canvas.width,c.canvas.height);c.drawImage(frame,sx,sy,sw,sh,0,0,c.canvas.width,c.canvas.height);
   // Pixel-stepped shadows frame the scene without blurring the sprite edges.

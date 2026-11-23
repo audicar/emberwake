@@ -1,13 +1,13 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.0';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.0';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.0';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.0';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.0';
-import { drawWilds } from './wilds.js?v=0.5.0';
-import { BackgroundMusic } from './music.js?v=0.5.0';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.0';
-import { WORKSHOP, WorkshopSequence } from './workshop-script.js?v=0.5.0';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.0';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.1';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.1';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.1';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.1';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.1';
+import { drawWilds } from './wilds.js?v=0.5.1';
+import { BackgroundMusic } from './music.js?v=0.5.1';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.1';
+import { WORKSHOP, WorkshopSequence } from './workshop-script.js?v=0.5.1';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.1';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -75,25 +75,27 @@ function renderWorkshopText() {
   $('workshop-speaker').textContent=beat.speaker==='player'?state.name:beat.speaker;
   $('workshop-text').textContent=beat.text;
   $('workshop-dialogue').classList.toggle('workshop-silent',beat.shot==='silence');
+  $('workshop-canvas').parentElement.classList.toggle('workshop-wide',beat.shot==='establish');
   const hasPortrait=beat.speaker==='player'||beat.speaker==='Supervisor';
   $('workshop-portrait').hidden=!hasPortrait;
   $('workshop-dialogue').classList.toggle('has-workshop-portrait',hasPortrait);
   if(hasPortrait)drawWorkshopPortrait($('workshop-portrait'),beat.speaker==='player'?state.appearance:WORKSHOP.supervisor,beat.speaker==='player'?state.name:'the supervisor');
   $('workshop-description').textContent=beat.description||'';
-  $('workshop-canvas').setAttribute('aria-label',beat.shot==='notice'?'The workshop noticeboard. Your character reads a list of appointments.':beat.shot==='silence'?'Your character pauses while the supervisor walks away, then returns to the unfinished order.':'Your character speaks with the supervisor beside a workbench of completed orders.');
+  $('workshop-canvas').setAttribute('aria-label',beat.shot==='establish'?'A wide view of the workplace: your character finishes an order, coworkers put away tools and collect coats, and the supervisor sits at a separate desk. Your character walks to the promotion notice.':beat.shot==='notice'?'The workshop promotion list. Your character’s name is missing.':beat.shot==='silence'?'Your character pauses while the supervisor walks away, then returns to the unfinished order.':'Your character speaks with the supervisor beside a workbench of completed orders.');
   updateWorkshopButton();
 }
 function updateWorkshopButton() {
   if(!workshop)return;
   const button=$('workshop-next'),ready=workshop.ready;
   if(button.disabled!==!ready)button.disabled=!ready;
-  const label=!ready?'A moment…':workshop.step===WORKSHOP.steps.length-1?'Continue to Hearthvale':'Continue';
+  if(ready&&document.activeElement===$('workshop'))button.focus();
+  const label=!ready?'A moment…':workshop.isLast?'Continue to Hearthvale':'Continue';
   if(button.textContent!==label)button.textContent=label;
 }
-function startWorkshop(step=0) {
+function startWorkshop(step=WORKSHOP.order[0]) {
   workshop=new WorkshopSequence(step);state.workshopStep=step;dialogue=null;nextAction=null;$('dialogue').hidden=true;
   homeActor=null;keys.clear();openOverlay('workshop');$('game').inert=true;
-  renderWorkshopText();refresh();save();$('workshop-next').focus();
+  renderWorkshopText();refresh();save();(workshop.ready?$('workshop-next'):$('workshop')).focus();
 }
 function finishWorkshop() {
   if(!workshop)return;
@@ -158,7 +160,7 @@ function openOverlay(id) {
   if (id === 'inventory') renderInventory();
   if (id === 'map') renderMap();
   if (id === 'menu') { $('leave-woods').hidden=!encounter; $('woods-button').hidden=!!encounter; $('woods-button').disabled=!state.awakened; }
-  requestAnimationFrame(() => (id==='workshop'?$('workshop-next'):$(id).querySelector('button,input'))?.focus());
+  requestAnimationFrame(() => (id==='workshop'?(workshop?.ready?$('workshop-next'):$('workshop')):$(id).querySelector('button,input'))?.focus());
 }
 function closeOverlays() {
   if (!started) return;

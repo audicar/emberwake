@@ -301,3 +301,7 @@
 .workshop-journey #workshop-canvas { object-fit: contain; }
 .workshop-journey .workshop-stage { background: #233d36; }
 .workshop-journey #workshop-text { max-width: 700px; }
+
+.dialogue-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+#dialogue .dialogue-actions button { margin: 0; border: 1px solid #a5b48a88; padding: 10px 12px; min-height: 44px; line-height: 1.5; }
+#dialogue-cancel { color: var(--muted); font-size: 11px; }

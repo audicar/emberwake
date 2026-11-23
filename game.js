@@ -1,14 +1,14 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.0';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.0';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.0';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.0';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.0';
-import { drawWilds } from './wilds.js?v=0.6.0';
-import { BackgroundMusic } from './music.js?v=0.6.0';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.0';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.0';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.0';
-import { drawJourney } from './journey-art.js?v=0.6.0';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.1';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.1';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.1';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.1';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.1';
+import { drawWilds } from './wilds.js?v=0.6.1';
+import { BackgroundMusic } from './music.js?v=0.6.1';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.1';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.1';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.1';
+import { drawJourney } from './journey-art.js?v=0.6.1';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -170,7 +170,7 @@ function interactHome() {
   if(target.type==='bed')return say('Your bed',[state.homecoming ? 'From the blanket in the corner comes a small, contented snore. You pull up the quilt. Rest until morning?' : 'The quilt still has the crooked star you stitched into it years ago. Aunt Wren mended carefully around it. Rest until morning?'],()=>{
     state.day++;state.minutes=420;homeActor={...HOME_BED,direction:'down',walk:0};
     toast(state.plots.some((_,i)=>isGrown(state,i))?'Morning light. Your moonroot has grown.':'Morning light and a warm cottage.');
-  },'Sleep until morning');
+  },'Sleep until morning','Not now');
   if(target.type==='kettle')return say('The kitchen',['The kettle is warm. Aunt Wren left your old cup at the front of the shelf. Its handle still has the little chip you remember.']);
   if(target.type==='books')return say('Aunt Wren’s books',['Gardening, weather, mending. Almost every page has a small note in the margin. Between two well-thumbed almanacs is a thin green book: “On Listening to Dragons”.']);
   if(target.type==='notes')return say('Aunt Wren’s note',['“I mended the quilt and left the crooked star. You worked so hard on that stitch. Moonroot needs water and a night’s sleep; leave the starflowers until your first harvest. There’s room here for whoever comes home with you. — Aunt Wren”']);
@@ -255,9 +255,9 @@ function renderMap() {
   $('map-player').style.left = `${actor.x / WORLD.width * 100}%`;
   $('map-player').style.top = `${actor.y / WORLD.height * 100}%`;
 }
-function say(speaker, lines, callback = null, finalLabel = 'Back to the village') {
+function say(speaker, lines, callback = null, finalLabel = 'Back to the village', cancelLabel = null) {
   const person = CAST[speaker];
-  keys.clear(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel }; nextAction = callback; renderDialogue();
+  keys.clear(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel, cancelLabel }; nextAction = callback; renderDialogue();
   $('dialogue-next').focus();
 }
 function renderDialogue() {
@@ -267,6 +267,13 @@ function renderDialogue() {
   $('dialogue').hidden = false; $('speaker').textContent = dialogue.speaker;
   $('dialogue-text').textContent = dialogue.lines[dialogue.index];
   $('dialogue-next').textContent = dialogue.index === dialogue.lines.length-1 ? `${dialogue.finalLabel} [E]` : 'Continue [E]';
+  $('dialogue-cancel').hidden=!dialogue.cancelLabel;
+  if(dialogue.cancelLabel)$('dialogue-cancel').textContent=`${dialogue.cancelLabel} [Esc]`;
+}
+function cancelDialogue() {
+  if(!dialogue)return;
+  dialogue=null;nextAction=null;keys.clear();$('dialogue').hidden=true;
+  refresh();save();world.focus();
 }
 function advanceDialogue() {
   if (!dialogue) return;
@@ -275,6 +282,7 @@ function advanceDialogue() {
   const action = nextAction; nextAction = null; action?.(); refresh(); save(); world.focus();
 }
 $('dialogue-next').onclick = advanceDialogue;
+$('dialogue-cancel').onclick = cancelDialogue;
 function openCreator(edit = false) {
   editing = edit; draft = { ...state.appearance }; $('character-name').value = state.name;
   $('creator-title').textContent = edit ? 'A little change?' : 'Who will you be?';
@@ -470,7 +478,8 @@ window.addEventListener('keydown',event=>{
   if (event.metaKey || event.ctrlKey || event.altKey) return;
   // Keep focus within open modal panels without interfering with name entry.
   const active=overlays.find(id=>!$(id).hidden);
-  if(event.key==='Tab'&&active){const focusables=[...$(active).querySelectorAll('button:not([hidden]),input:not([type=file])')].filter(e=>!e.disabled&&e.getClientRects().length);const first=focusables[0],last=focusables.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}return;}
+  const focusPanel=active||(dialogue?'dialogue':null);
+  if(event.key==='Tab'&&focusPanel){const focusables=[...$(focusPanel).querySelectorAll('button:not([hidden]),input:not([type=file])')].filter(e=>!e.disabled&&e.getClientRects().length);const first=focusables[0],last=focusables.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}return;}
   if(event.target instanceof HTMLInputElement){if(event.key==='Escape'&&active&&(active!=='creator'||editing)){event.preventDefault();closeOverlays();}return;}
   const key=event.key.length===1?event.key.toLowerCase():event.key;
   if(workshop) {
@@ -481,7 +490,10 @@ window.addEventListener('keydown',event=>{
     }
     return;
   }
-  if(key==='Escape'){event.preventDefault();keys.clear();if(dialogue){dialogue=null;nextAction=null;$('dialogue').hidden=true;refresh();save();world.focus();}else if(active)closeOverlays();else if(started)openOverlay('menu');return;}
+  if(dialogue&&[' ','Enter'].includes(key)&&event.target===$('dialogue-cancel')) {
+    event.preventDefault();if(!event.repeat)cancelDialogue();return;
+  }
+  if(key==='Escape'){event.preventDefault();keys.clear();if(dialogue)cancelDialogue();else if(active)closeOverlays();else if(started)openOverlay('menu');return;}
   if (panelShortcuts[key] && started && !dialogue && active !== 'creator') {
     event.preventDefault(); if (!event.repeat) togglePanel(panelShortcuts[key]); return;
   }

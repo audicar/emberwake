@@ -6,6 +6,11 @@ export const THEMES = {
     chords: [[40,43,47],[48,52,55],[45,48,52],[47,50,54]],
     melody: [71,null,null,67,null,64,null,null, 67,null,64,null,null,62,null,null, 69,null,null,67,null,64,null,null, 66,null,62,null,null,null,null,null, 71,null,74,null,null,71,67,null, 72,null,null,67,null,64,null,null, 69,null,67,null,null,64,null,null, 66,null,62,null,null,null,64,null],
   },
+  journey: {
+    bpm: 70,
+    chords: [[48,52,55],[43,47,50],[45,48,52],[41,45,48]],
+    melody: [67,null,64,null,67,69,null,72, 71,null,67,null,62,null,null,null, 64,null,67,69,null,72,76,null, 72,null,69,null,67,null,null,null, 72,76,null,79,null,76,72,null, 71,null,74,72,71,67,null,null, 69,null,72,null,76,72,69,null, 67,null,65,64,null,null,67,null],
+  },
   village: {
     bpm: 78,
     chords: [[43,47,50],[40,43,47],[48,52,55],[50,54,57]],

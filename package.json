@@ -1,6 +1,6 @@
 {
   "name": "emberwake",
-  "version": "0.5.6",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "description": "A little life beside a sleeping dragon. A dependency-free browser game.",

@@ -9,8 +9,8 @@ test('the workshop preserves the conversation and gives the invitation a silent 
   assert.equal(seen[0].shot,'establish');assert.equal(seen[1].shot,'notice');
   assert.match(seen[1].text,/Your name isn’t there/);assert.match(seen[2].text,/your promotion/);
   assert.deepEqual(seen.filter(s=>s.speaker==='player').map(s=>s.text),['You said that last season.']);
-  assert.deepEqual(seen.slice(-4).map(s=>s.shot),['silence','find-letter','letter','fold-letter']);
-  assert.equal(seen.at(-1).text,'');assert.match(seen[5].text,/You’re the only one I can trust/);
+  assert.deepEqual(seen.filter(s=>s.scene!=='journey').slice(-4).map(s=>s.shot),['silence','find-letter','letter','fold-letter']);
+  assert.equal(seen.filter(s=>s.scene!=='journey').at(-1).text,'');assert.match(seen[5].text,/You’re the only one I can trust/);
   assert.equal(scene.advance(),false);
 });
 test('the quiet final beat cannot be advanced immediately, but can be skipped',()=>{
@@ -28,7 +28,7 @@ test('opening progress round-trips while existing saves do not replay it',()=>{
   }
   const older=newState();delete older.workshopStep;
   assert.equal(validateSave(older).workshopStep,null);
-  for(const value of [-1,10,1.5,'1',false])assert.throws(()=>validateSave({...older,workshopStep:value}));
+  for(const value of [-1,14,1.5,'1',false])assert.throws(()=>validateSave({...older,workshopStep:value}));
   for(const [step,shot] of ['notice','conversation','conversation','conversation','request','silence'].entries()) {
     assert.equal(new WorkshopSequence(step).beat.shot,shot,'older in-progress saves retain their scene');
   }
@@ -45,4 +45,17 @@ test('the promotion list never contains the chosen character name',()=>{
     const names=promotionNames(name);assert.equal(names.length,2);
     assert.ok(names.every(n=>n.toLowerCase()!==name.trim().toLowerCase()));
   }
+});
+test('the workshop leads into a resumable journey before the cottage handover',()=>{
+  let scene=new WorkshopSequence(9);scene.update(3);scene.advance();
+  assert.equal(scene.step,WORKSHOP.journey.firstStep);assert.equal(scene.isJourney,true);
+  const shots=[];
+  while(!scene.finished) {
+    const saved=validateSave({...newState(),workshopStep:scene.step});
+    scene=new WorkshopSequence(saved.workshopStep);
+    shots.push(scene.beat.shot);assert.equal(scene.advance(),false,'each travelling shot has a short pause');
+    scene.update(scene.beat.minSeconds);assert.equal(scene.advance(),true);
+  }
+  assert.deepEqual(shots,['coach-letter','open-road','woodland-window','cottage-arrival']);
+  assert.equal(scene.beat.nextLabel,'Step inside');
 });

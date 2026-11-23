@@ -296,3 +296,8 @@
   .workshop-letter-open .workshop-dialogue { gap: 12px; padding: 12px 16px; }
   .workshop-letter-open .workshop-lines .eyebrow { font-size: 9px; letter-spacing: 1px; }
 }
+
+/* Keep the whole coach and landscape visible on a narrow screen. */
+.workshop-journey #workshop-canvas { object-fit: contain; }
+.workshop-journey .workshop-stage { background: #233d36; }
+.workshop-journey #workshop-text { max-width: 700px; }

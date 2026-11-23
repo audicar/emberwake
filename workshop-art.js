@@ -1,6 +1,6 @@
-import { drawCharacter } from './character.js?v=0.5.6';
-import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.6';
-import { PALETTES } from './core.js?v=0.5.6';
+import { drawCharacter } from './character.js?v=0.6.0';
+import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.6.0';
+import { PALETTES } from './core.js?v=0.6.0';
 
 const WIDTH=384,HEIGHT=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(x,y,w,h);};

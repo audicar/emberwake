@@ -1,5 +1,6 @@
 import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown } from './core.js';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.2.2';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.2.3';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.2.3';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -38,10 +39,14 @@ function closeOverlays() {
   (previousFocus?.isConnected ? previousFocus : world).focus();
 }
 function say(speaker, lines, callback = null, finalLabel = 'Back to the village') {
-  keys.clear(); dialogue = { speaker, lines, index: 0, finalLabel }; nextAction = callback; renderDialogue();
+  const person = CAST[speaker];
+  keys.clear(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel }; nextAction = callback; renderDialogue();
   $('dialogue-next').focus();
 }
 function renderDialogue() {
+  const hasPortrait = drawSpeakerPortrait($('dialogue-portrait'), dialogue.portraitId);
+  $('dialogue-portrait-frame').hidden = !hasPortrait;
+  $('dialogue').classList.toggle('has-portrait', hasPortrait);
   $('dialogue').hidden = false; $('speaker').textContent = dialogue.speaker;
   $('dialogue-text').textContent = dialogue.lines[dialogue.index];
   $('dialogue-next').textContent = dialogue.index === dialogue.lines.length-1 ? `${dialogue.finalLabel} [E]` : 'Continue [E]';
@@ -146,8 +151,8 @@ function renderJournal() {
 }
 function nearest() {
   const things=[
-    {x:236,y:311,type:'rowan',label:'Talk to Rowan'},
-    {x:402,y:222,type:'mira',label:'Talk to Mira'},
+    {...CAST.rowan,type:'rowan',label:'Talk to Rowan'},
+    {...CAST.mira,type:'mira',label:'Talk to Mira'},
     {x:160,y:235,type:'home',label:'Rest at your cottage'},
     {x:368,y:203,type:'tailor',label:'Visit the wardrobe'},
     {x:720,y:193,type:'shrine',label:'Listen at the old shrine'},
@@ -162,14 +167,14 @@ function interact() {
   if(dialogue)return advanceDialogue();if(isPaused()||!started)return;
   const t=nearest();if(!t)return toast('Wander a little closer to someone or something.');
   if(t.type==='rowan'){
-    if(!state.metRowan)say('Rowan · village gardener',[
+    if(!state.metRowan)say('rowan',[
       `You must be ${state.name}. Wren said you’d come. Here — three moonroot seeds and a watering can. A decent beginning, I reckon.`,
       'The three dark beds just beside me are yours. Plant a seed, water it, then sleep at your cottage. Moonroot only needs one good night.',
       'And those pale starflowers? Pick a few if you see them. Wren used to take three to the old shrine across the bridge. Said the hill slept easier afterwards.',
     ],()=>{state.metRowan=true;state.seeds=3;toast('Received: 3 moonroot seeds and a watering can.');});
-    else say('Rowan', [state.awakened?'The garden’s doing well. So’s the mountain, by the sound of it. Funny how those things go together.':!state.harvested?'Plant, water, sleep. You can’t hurry a moonroot. Cottage is north-west, with the red roof.':'A fine first harvest. Take a moonroot and three starflowers to the shrine, over the eastern bridge. If you feel like it.']);
+    else say('rowan', [state.awakened?'The garden’s doing well. So’s the mountain, by the sound of it. Funny how those things go together.':!state.harvested?'Plant, water, sleep. You can’t hurry a moonroot. Cottage is north-west, with the red roof.':'A fine first harvest. Take a moonroot and three starflowers to the shrine, over the eastern bridge. If you feel like it.']);
   }
-  if(t.type==='mira') {state.metMira=true;say('Mira · village tailor', [state.awakened?'I heard a noise from the hill last night. Rather like a very large cat purring. I suppose we’re keeping it?':'Welcome! My wardrobe’s always open — just walk up to the blue-roofed cottage. Everyone deserves clothes that feel like themselves.']);}
+  if(t.type==='mira') {state.metMira=true;say('mira', [state.awakened?'I heard a noise from the hill last night. Rather like a very large cat purring. I suppose we’re keeping it?':'Welcome! My wardrobe’s always open — just walk up to the blue-roofed cottage. Everyone deserves clothes that feel like themselves.']);}
   if(t.type==='tailor')openCreator(true);
   if(t.type==='flower'){state.flowers.push(t.id);toast(`Starflower gathered · ${state.flowers.length}/3. A little warm against your palm.`);}
   if(t.type==='plot')toast(tend(state,t.id));
@@ -180,8 +185,8 @@ function interact() {
     },'Sleep until morning');
   }
   if(t.type==='shrine'){
-    if(state.awakened)say('The dream beneath the hill',[`${state.name}. A name to remember. I shall dream of rain for your garden. You may stay as long as you like.`]);
-    else if(awaken(state))say('The dream beneath the hill',[
+    if(state.awakened)say('dragon',[`${state.name}. A name to remember. I shall dream of rain for your garden. You may stay as long as you like.`]);
+    else if(awaken(state))say('dragon',[
       'You set the moonroot and three starflowers in the bowl. The stone warms beneath your hand. Far above, something opens one golden eye.',
       `At last. ${state.name}. I knew you by the way you tended something small.`,
       'They will call you the Emberkeeper. They will expect a sword, perhaps. But I have no need of a sword. I need someone to keep this place alive.',

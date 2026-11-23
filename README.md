@@ -6,7 +6,7 @@ A little life beside a sleeping dragon. A small, single-player browser game abou
 
 ## The first chapter
 
-Name your character and choose a female or male body, skin tone, hairstyle, hair colour, clothes, cloth colour and an accessory. The wardrobe has 12 hairstyles, eight outfits, six accessories and eight hair and cloth colours. Both body choices can wear every style; a four-direction preview shows the same sprite used in the village. Meet Rowan and Mira, grow moonroot in the village garden, gather three starflowers, and visit the old shrine. The first chapter takes roughly 5–10 minutes; you can stay in the village afterwards. Appearance and name can be changed from the menu at any time. Existing saves keep their progress and option selections; saves created before body selection was added load with the female body, which can be changed in the wardrobe.
+Name your character and choose a female or male body, skin tone, hairstyle, hair colour, clothes, cloth colour and an accessory. The wardrobe has 12 hairstyles, eight outfits, six accessories and eight hair and cloth colours. Both body choices can wear every style; a four-direction preview shows the same sprite used in the village. Conversations show the speaker’s face in a portrait to the left of the dialogue. Meet Rowan and Mira, grow moonroot in the village garden, gather three starflowers, and visit the old shrine. The first chapter takes roughly 5–10 minutes; you can stay in the village afterwards. Appearance and name can be changed from the menu at any time. Existing saves keep their progress and option selections; saves created before body selection was added load with the female body, which can be changed in the wardrobe.
 
 This is an initial playable prototype. There is one outdoor map, two neighbours, a simple garden and a short story. Building interiors, further chapters, fishing, trading and seasonal simulation are future possibilities, rather than implemented features.
 
@@ -53,6 +53,7 @@ The repository is a static site published from `main` at the repository root, wi
 - `core.js`: serialisable game state, save validation and garden/story rules.
 - `art.js`: original procedural pixel scenery and collision geometry.
 - `character.js`: layered character sprites, body silhouettes, hair, garments and accessories.
+- `cast.js`: shared villager appearances and dialogue portraits.
 - `game.js`: browser input, interface, persistence, dialogue, audio and render loop.
 - `style.css`, `index.html`: responsive game screen and modal panels.
 - `tests/core.test.js`: first-chapter progression, save validation, old-save migration and map reachability.

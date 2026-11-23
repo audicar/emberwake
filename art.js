@@ -1,6 +1,7 @@
 import { FLOWERS, PLOTS, isGrown } from './core.js';
-import { drawCharacter } from './character.js?v=0.2.2';
-export { drawCharacter } from './character.js?v=0.2.2';
+import { drawCharacter } from './character.js?v=0.2.3';
+export { drawCharacter } from './character.js?v=0.2.3';
+import { CAST } from './cast.js?v=0.2.3';
 export const WORLD = { width: 832, height: 576 };
 export const BUILDINGS = [{ x: 112, y: 144, w: 96, h: 80, name: 'Your cottage', roof: '#ad6a52' }, { x: 320, y: 112, w: 96, h: 80, name: 'Mira’s stitches', roof: '#67778a' }, { x: 112, y: 352, w: 64, h: 64, name: 'The potting shed', roof: '#a77f4f' }];
 const trees = [];
@@ -93,7 +94,7 @@ export function drawWorld(c, s, time, camera) {
   for(const [x,y] of [[100,235],[212,231],[314,202],[419,195]]){rect(c,x,y,8,8,'#ac8061');rect(c,x-2,y-4,12,7,'#5b824d');flowers(c,x+4,y-2,'#dbb28f');}
   for(const [x,y] of [[192,389],[202,396]]){rect(c,x,y,10,10,'#a88d62');rect(c,x+2,y+2,6,6,'#94774f');rect(c,x+4,y,2,10,'#bea071');}
   for(const f of FLOWERS)if(!s.flowers.includes(f.id)){flowers(c,f.x,f.y,'#eee0a3');rect(c,f.x-4,f.y-4,2,2,'#eee0a3');rect(c,f.x+3,f.y-4,2,2,'#eee0a3');if(Math.sin(time/450+f.x)>0.7)rect(c,f.x+5,f.y-12,1,2,'#fff0bd');}
-  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),{y:311,draw:()=>drawCharacter(c,236,311,{skin:2,hair:4,colour:1,hairStyle:1,outfit:1,accessory:2,gender:1})},{y:222,draw:()=>drawCharacter(c,402,222,{skin:3,hair:3,colour:3,hairStyle:6,outfit:4,accessory:4,gender:0})},{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
+  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[CAST.rowan,CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance)})),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
   sprites.sort((a,b)=>a.y-b.y).forEach(spr=>spr.draw());
   // Chimney smoke and butterflies are purely decorative.
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches){for(const b of BUILDINGS){for(let i=0;i<3;i++){const phase=(time/90+i*10)%38;rect(c,b.x+b.w-17+Math.sin(phase/9)*3,b.y-10-phase,4+Math.floor(phase/10),3,'#e0deba40');}}for(let i=0;i<5;i++){const x=205+i*79+Math.sin(time/2400+i)*15,y=390+Math.sin(time/1800+i*5)*23;rect(c,x,y,Math.floor(time/150)%2?3:1,2,i%2?'#edc895':'#e8e7b6');}}

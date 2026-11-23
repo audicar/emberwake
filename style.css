@@ -3,6 +3,20 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.swatch:hover{transform:none}}
 
 /* Wardrobe: the same detailed sprite is used in every preview and in play. */
+/* Conversation portraits sit beside the text without reducing its readable width. */
+#dialogue { width: min(720px, calc(100% - 40px)); padding: 22px; max-height: calc(100% - 40px); overflow-y: auto; }
+#dialogue.has-portrait { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 22px; align-items: start; }
+#dialogue-portrait-frame { padding: 4px; border: 1px solid #a5b48a; background: #1c322a; box-shadow: 3px 3px 0 #10271e66; }
+#dialogue-portrait { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.dialogue-copy { min-width: 0; }
+#dialogue-text { overflow-wrap: anywhere; }
+#dialogue-next { float: none; display: block; margin-left: auto; line-height: 1.5; }
+@media (max-width: 580px) {
+  #dialogue { width: calc(100% - 28px); padding: 16px; max-height: calc(100% - 32px); }
+  #dialogue.has-portrait { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; }
+  #dialogue .eyebrow { font-size: 9px; letter-spacing: 1.3px; line-height: 1.7; }
+  #dialogue p { font-size: 17px; line-height: 1.5; margin-top: 8px; }
+}
 .creator {
   width: 920px;
   height: min(760px, calc(100dvh - 60px));

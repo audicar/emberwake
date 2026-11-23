@@ -1,7 +1,7 @@
 import { FLOWERS, PLOTS, isGrown } from './core.js';
-import { drawCharacter } from './character.js?v=0.2.3';
-export { drawCharacter } from './character.js?v=0.2.3';
-import { CAST } from './cast.js?v=0.2.3';
+import { drawCharacter } from './character.js?v=0.3.0';
+export { drawCharacter } from './character.js?v=0.3.0';
+import { CAST } from './cast.js?v=0.3.0';
 export const WORLD = { width: 832, height: 576 };
 export const BUILDINGS = [{ x: 112, y: 144, w: 96, h: 80, name: 'Your cottage', roof: '#ad6a52' }, { x: 320, y: 112, w: 96, h: 80, name: 'Mira’s stitches', roof: '#67778a' }, { x: 112, y: 352, w: 64, h: 64, name: 'The potting shed', roof: '#a77f4f' }];
 const trees = [];

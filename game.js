@@ -1,10 +1,13 @@
 import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown } from './core.js';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.2.3';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.2.3';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.3.0';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.3.0';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.3.0';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
-const overlays = ['creator', 'journal', 'menu'];
+const overlays = ['creator', 'inventory', 'journal', 'map', 'menu'];
+const panelShortcuts = { i: 'inventory', j: 'journal', m: 'map' };
+let selectedInventoryItem = 'seeds';
 let state = newState(), draft = { ...state.appearance }, started = false, editing = false, dialogue = null, nextAction = null, previousFocus = null;
 let lastTime = 0, lastSave = 0, toastTimer, moving = false, soundContext, soundGain, soundEnabled = false;
 const keys = new Set(), camera = { x: 0, y: 0 };
@@ -28,15 +31,71 @@ function refresh() {
   $('objective').textContent = objective(state);
 }
 function openOverlay(id) {
-  previousFocus = document.activeElement; keys.clear();
+  if (!overlays.some(key => !$(key).hidden)) previousFocus = document.activeElement;
+  keys.clear();
   overlays.forEach(key => $(key).hidden = key !== id);
   if (id === 'journal') renderJournal();
+  if (id === 'inventory') renderInventory();
+  if (id === 'map') renderMap();
   requestAnimationFrame(() => $(id).querySelector('button,input')?.focus());
 }
 function closeOverlays() {
   if (!started) return;
   overlays.forEach(id => $(id).hidden = true); keys.clear();
   (previousFocus?.isConnected ? previousFocus : world).focus();
+}
+function togglePanel(id) {
+  if (!started || dialogue || !$('creator').hidden) return;
+  $(id).hidden ? openOverlay(id) : closeOverlays();
+}
+function renderItemDetail(item) {
+  $('item-kind').textContent = item.kind;
+  $('item-name').textContent = item.name;
+  $('item-description').textContent = item.description;
+  $('item-quantity').textContent = item.quantity === 0 ? 'Not in your bag yet' : item.id === 'watering-can' ? 'Ready to use' : `${item.quantity} in your bag`;
+}
+function renderInventory() {
+  const items = inventoryItems(state);
+  $('inventory-empty').hidden = items.some(item => item.quantity > 0);
+  $('inventory-grid').replaceChildren();
+  for (const item of items) {
+    const button = document.createElement('button'); button.type = 'button';
+    button.className = `inventory-slot${item.quantity ? '' : ' unowned'}`;
+    button.dataset.item = item.id;
+    button.setAttribute('aria-label', `${item.name}, ${item.quantity} in your bag`);
+    button.setAttribute('aria-pressed', String(item.id === selectedInventoryItem));
+    const icon = document.createElement('canvas'); icon.width = 32; icon.height = 32; icon.setAttribute('aria-hidden', 'true');
+    const label = document.createElement('span'); label.className = 'inventory-item-name'; label.textContent = item.name;
+    const quantity = document.createElement('span'); quantity.className = 'inventory-count'; quantity.textContent = item.quantity;
+    button.append(icon, label, quantity); drawItemIcon(icon, item.id);
+    button.onclick = () => {
+      selectedInventoryItem = item.id;
+      $('inventory-grid').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+      renderItemDetail(item);
+    };
+    $('inventory-grid').append(button);
+  }
+  renderItemDetail(items.find(item => item.id === selectedInventoryItem) || items[0]);
+  $('inventory-outfit').textContent = `${STYLES.outfit[state.appearance.outfit]}${state.appearance.accessory ? ` · ${STYLES.accessory[state.appearance.accessory]}` : ''}`;
+}
+function renderMap() {
+  const canvas = $('map-canvas'), c = canvas.getContext('2d');
+  c.clearRect(0, 0, WORLD.width, WORLD.height); c.imageSmoothingEnabled = false;
+  // Use the real world geometry, with daylight so the map stays legible at night.
+  drawWorld(c, { ...state, walk: 0, minutes: 600 }, 0, { x: 0, y: 0 });
+  const landmarks = [
+    ['Your cottage', 160, 142], ['Mira’s stitches', 368, 110],
+    ['Garden · Rowan', 280, 404], ['Old shrine', 720, 117],
+    ['Bridge', 585, 293], ['Meadow', 394, 493],
+  ];
+  $('map-landmarks').replaceChildren();
+  for (const [name, x, y] of landmarks) {
+    const label = document.createElement('span'); label.className = 'map-landmark'; label.textContent = name;
+    label.style.left = `${x / WORLD.width * 100}%`; label.style.top = `${y / WORLD.height * 100}%`;
+    $('map-landmarks').append(label);
+  }
+  $('map-player').style.left = `${state.x / WORLD.width * 100}%`;
+  $('map-player').style.top = `${state.y / WORLD.height * 100}%`;
 }
 function say(speaker, lines, callback = null, finalLabel = 'Back to the village') {
   const person = CAST[speaker];
@@ -147,7 +206,7 @@ $('cancel-creator').onclick=closeOverlays;
 function renderJournal() {
   $('journal-list').replaceChildren();
   for(const [key,title,description] of QUESTS){const done=key==='flowers'?state.flowers.length===3:state[key];const item=document.createElement('div');item.className=`quest${done?' done':''}`;const check=document.createElement('span');check.className='quest-check';check.textContent=done?'✓':'';check.setAttribute('aria-label',done?'Complete':'Incomplete');const copy=document.createElement('div');const heading=document.createElement('h3');heading.textContent=title;const text=document.createElement('p');text.textContent=description;copy.append(heading,text);item.append(check,copy);$('journal-list').append(item);}
-  $('inventory').textContent = `${state.seeds} moonroot seeds · ${state.moonroot} moonroot · ${state.awakened?0:state.flowers.length} starflowers${state.metRowan?' · watering can':''}`;
+  $('journal-inventory').textContent = `${state.seeds} moonroot seeds · ${state.moonroot} moonroot · ${state.awakened?0:state.flowers.length} starflowers${state.metRowan?' · watering can':''}`;
 }
 function nearest() {
   const things=[
@@ -199,8 +258,10 @@ function interact() {
   refresh();save();
 }
 
-$('journal-button').onclick=()=>started&&(!$('journal').hidden?closeOverlays():openOverlay('journal'));
-$('settings-button').onclick=()=>started&&(!$('menu').hidden?closeOverlays():openOverlay('menu'));
+for (const id of ['inventory', 'journal', 'map']) $(id + '-button').onclick = () => togglePanel(id);
+$('settings-button').onclick = () => togglePanel('menu');
+$('journal-inventory-button').onclick = () => togglePanel('inventory');
+$('inventory-wardrobe').onclick = () => openCreator(true);
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeOverlays);
 overlays.forEach(id=>$(id).addEventListener('click',event=>{if(event.target===$(id)&&id!=='creator')closeOverlays();}));
 $('wardrobe').onclick=()=>openCreator(true);
@@ -216,13 +277,16 @@ function toggleSound(){
 $('sound').onclick=toggleSound;
 const directionKeys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
 window.addEventListener('keydown',event=>{
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
   // Keep focus within open modal panels without interfering with name entry.
   const active=overlays.find(id=>!$(id).hidden);
   if(event.key==='Tab'&&active){const focusables=[...$(active).querySelectorAll('button:not([hidden]),input:not([type=file])')].filter(e=>e.getClientRects().length);const first=focusables[0],last=focusables.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}return;}
   if(event.target instanceof HTMLInputElement){if(event.key==='Escape'&&editing)closeOverlays();return;}
   const key=event.key.length===1?event.key.toLowerCase():event.key;
   if(key==='Escape'){event.preventDefault();keys.clear();if(dialogue){dialogue=null;nextAction=null;$('dialogue').hidden=true;refresh();save();world.focus();}else if(active)closeOverlays();else if(started)openOverlay('menu');return;}
-  if((key==='j')&&started&&!dialogue&&(!active||active==='journal')){event.preventDefault();if(event.repeat)return;active?closeOverlays():openOverlay('journal');return;}
+  if (panelShortcuts[key] && started && !dialogue && active !== 'creator') {
+    event.preventDefault(); if (!event.repeat) togglePanel(panelShortcuts[key]); return;
+  }
   if(active)return;
   if(directionKeys[key]){event.preventDefault();if(!dialogue)keys.add(directionKeys[key]);return;}
   if(['e',' ','Enter'].includes(key)){event.preventDefault();if(!event.repeat)interact();}

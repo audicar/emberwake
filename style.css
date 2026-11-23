@@ -113,3 +113,70 @@
   #character-form { display: block; }
   #appearance-options { min-height: 240px; overflow: visible; }
 }
+
+/* Satchel and village map share the existing modal behaviour and keyboard focus. */
+.satchel, .village-map { position: relative; padding: 30px; max-height: calc(100dvh - 48px); overflow-y: auto; }
+.satchel { width: 600px; }
+.panel-intro { color: #b9c6ab; font-size: 12px; line-height: 1.7; margin: 0 0 22px; }
+.empty-bag { color: #d8c498; border: 1px dashed #7b8b6580; padding: 12px; font-size: 12px; line-height: 1.7; }
+.inventory-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.inventory-slot { position: relative; display: flex; align-items: center; gap: 14px; padding: 16px 12px; border: 1px solid #7e91665c; background: #1d332b; text-align: left; }
+.inventory-slot:hover { background: #354d38; border-color: #b0bc8b; }
+.inventory-slot[aria-pressed=true] { border-color: #e7bd86; background: #7e8d5630; }
+.inventory-slot canvas { width: 48px; height: 48px; image-rendering: pixelated; flex-shrink: 0; }
+.inventory-slot.unowned canvas { opacity: .45; }
+.inventory-slot.unowned .inventory-item-name { color: #a5b298; }
+.inventory-item-name { font-size: 12px; line-height: 1.6; padding-right: 10px; }
+.inventory-count { position: absolute; right: 8px; bottom: 7px; min-width: 21px; padding: 2px 4px; background: #162e28; color: #f4d99c; border: 1px solid #81946a77; font-size: 12px; text-align: center; }
+.item-detail { margin-top: 18px; padding: 18px; background: #e6dfbd; color: #354536; min-height: 160px; box-shadow: 3px 3px 0 #172a2266; }
+.item-detail .eyebrow { color: #6e7954; font-size: 9px; }
+.item-detail h3 { margin: 8px 0; font: normal 23px Georgia, serif; }
+.item-detail p { margin: 0 0 10px; font-size: 12px; line-height: 1.8; }
+#item-quantity { color: #6b7552; font-size: 11px; }
+.inventory-wearing { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid #71856566; padding-top: 16px; margin-top: 22px; }
+.inventory-wearing .eyebrow { display: block; margin-bottom: 7px; font-size: 9px; }
+#inventory-outfit { font-size: 11px; line-height: 1.7; }
+#inventory-wardrobe { font-size: 11px; border: 1px solid #8f9f6b77; flex-shrink: 0; }
+.panel-key-hint { font-size: 10px; color: #b3c0a2; line-height: 1.9; margin: 22px 0 0; }
+.journal-bag-link { padding: 3px 0; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
+.journal-bag-link kbd { color: #65734d; border-color: #7b895a; margin-left: 6px; }
+.village-map { width: 820px; }
+.map-frame { position: relative; border: 2px solid #9aa87d; box-shadow: 0 0 0 4px #172e25, 5px 5px 0 #12271f66; }
+#map-canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+#map-landmarks { position: absolute; inset: 0; pointer-events: none; }
+.map-landmark { position: absolute; transform: translate(-50%, -100%); white-space: nowrap; padding: 4px 6px; background: #20392de8; color: #f3e5bd; font-size: 10px; line-height: 1.5; border: 1px solid #c4bc8c99; box-shadow: 2px 2px 0 #19332966; }
+.map-player { position: absolute; z-index: 1; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 5px; }
+.map-player > span:last-child { position: absolute; bottom: 17px; left: 50%; transform: translateX(-50%); padding: 4px 7px; color: #283a2c; background: #f7d99b; border: 1px solid #fff1c3; font-size: 11px; font-weight: bold; }
+.map-player-dot, .map-legend-dot { display: inline-block; width: 11px; height: 11px; background: #ffda88; border: 2px solid #fff4d0; box-shadow: 0 0 0 2px #5a6242; transform: rotate(45deg); }
+.map-north { position: absolute; right: 12px; top: 12px; color: #fff0c5; font-size: 12px; line-height: 1.5; text-align: center; text-shadow: 1px 1px #1c362b; }
+.map-footer { display: flex; justify-content: space-between; gap: 14px; margin-top: 22px; font-size: 10px; color: #c3cfaf; line-height: 2; flex-wrap: wrap; }
+.map-legend-dot { width: 8px; height: 8px; margin: 0 8px 0 3px; }
+.map-legend-place { margin: 0 5px 0 12px; color: #e8c98e; }
+@media (max-width: 580px) {
+  .topbar { height: 96px; position: relative; display: grid; grid-template-columns: 1fr; grid-template-rows: 30px 36px; align-content: center; gap: 6px; padding: 8px 14px; }
+  .wordmark { grid-row: 1; }
+  .topbar nav { grid-row: 2; display: flex; justify-content: space-between; gap: 4px; }
+  .topbar nav button { font-size: 11px; padding: 6px 9px; }
+  .topbar #sound { position: absolute; right: 14px; top: 8px; font-size: 0; width: 32px; height: 30px; }
+  .day-info { top: 110px; right: 14px; }
+  .satchel, .village-map { padding: 24px 18px; max-height: calc(100dvh - 40px); }
+  .satchel h2, .village-map h2 { font-size: 30px; }
+  .panel-intro { font-size: 11px; margin-bottom: 18px; }
+  .inventory-grid { gap: 8px; }
+  .inventory-slot { display: flex; flex-direction: column; gap: 6px; padding: 12px 6px 15px; text-align: center; }
+  .inventory-slot canvas { width: 48px; height: 48px; }
+  .inventory-item-name { font-size: 11px; padding-right: 0; }
+  .inventory-count { bottom: 7px; right: 5px; font-size: 10px; min-width: 18px; }
+  .item-detail { padding: 15px; min-height: 164px; }
+  .item-detail h3 { font-size: 22px; }
+  .item-detail p { font-size: 11px; }
+  .inventory-wearing { margin-top: 18px; }
+  #inventory-outfit { font-size: 10px; }
+  #inventory-wardrobe { padding: 9px 8px; font-size: 10px; }
+  .panel-key-hint { font-size: 9px; }
+  .map-landmark { font-size: 8px; padding: 2px 3px; }
+  .map-player > span:last-child { font-size: 9px; padding: 2px 4px; bottom: 14px; }
+  .map-player-dot { width: 9px; height: 9px; }
+  .map-footer { font-size: 9px; gap: 8px; margin-top: 18px; }
+  .map-north { top: 6px; right: 7px; font-size: 10px; }
+}

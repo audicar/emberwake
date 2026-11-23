@@ -16,9 +16,13 @@ This is an initial playable prototype. There is one outdoor map, two neighbours,
 | --- | --- |
 | Move | Arrow keys or WASD |
 | Talk, gather, plant, water, harvest | E, Space or Enter |
+| Inventory | I |
 | Journal | J |
+| Village map | M |
 | Menu / close / leave a conversation | Escape |
 | Touch devices | On-screen direction pad and E button |
+
+Inventory, journal and map can also be opened from the toolbar. Press the same key again or Escape to close; I, J and M switch directly between these screens. The map shows the village landmarks and your current position. The inventory includes item quantities and descriptions, plus a shortcut to the wardrobe. These screens pause movement and the in-game clock.
 
 The in-game day advances slowly and stops before midnight. There is no forced bedtime or penalty. Sleep by interacting with the front door of your red-roofed cottage, north-west of the square. Plant and water a moonroot before sleeping; it will be ready the next morning.
 
@@ -54,9 +58,11 @@ The repository is a static site published from `main` at the repository root, wi
 - `art.js`: original procedural pixel scenery and collision geometry.
 - `character.js`: layered character sprites, body silhouettes, hair, garments and accessories.
 - `cast.js`: shared villager appearances and dialogue portraits.
+- `inventory.js`: item definitions, quantities derived from save data, and pixel icons.
 - `game.js`: browser input, interface, persistence, dialogue, audio and render loop.
 - `style.css`, `index.html`: responsive game screen and modal panels.
 - `tests/core.test.js`: first-chapter progression, save validation, old-save migration and map reachability.
 - `tests/character.test.js`: render bounds, walking directions and visibly distinct appearance options.
+- `tests/inventory.test.js`: item quantities across planting, harvesting and shrine offerings.
 
 The title is a working name. This game uses original art, writing and code; it contains no assets or characters from its inspirations.

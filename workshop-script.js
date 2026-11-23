@@ -9,7 +9,17 @@ export const WORKSHOP = {
     { skin: 6, hair: 1, colour: 2, hairStyle: 7, outfit: 4, accessory: 0, gender: 0 },
   ],
   // Stable beat numbers preserve saves from the first version of the scene.
-  order: [6,0,1,2,3,4,5],
+  order: [6,0,1,2,3,4,5,7,8,9],
+  invitation: {
+    salutation: 'My love,',
+    paragraphs: [
+      'You sounded tired in your last letter. Come spend the spring in Hearthvale. I’ll be travelling, and your old room is ready.',
+      'You don’t need to know what comes next before you get here.',
+      'Your cup’s by the kettle.',
+    ],
+    signoff: 'With love,',
+    signature: 'Aunt Wren',
+  },
   steps: [
     { shot: 'notice', speaker: 'Promotions', text: 'Your name isn’t there. Again.' },
     { shot: 'conversation', speaker: 'Supervisor', text: 'About your promotion—I haven’t had a chance to put your name forward. There’s quite a bit involved. We’ll revisit it next season.' },
@@ -18,6 +28,9 @@ export const WORKSHOP = {
     { shot: 'request', speaker: 'Supervisor', text: 'Before you go—could you finish that order? You’re the only one I can trust to get it right.' },
     { shot: 'silence', speaker: '', text: '', description: 'You pause beside the unfinished order, then quietly return to work.', minSeconds: 3.2 },
     { shot: 'establish', speaker: 'The workshop', text: 'End of the working day. You finish an order while the others put away their tools.', minSeconds: 4.8 },
+    { shot: 'find-letter', speaker: 'The workbench', text: 'An opened letter catches your eye inside your bag.', description: 'You turn from the unfinished order towards a familiar envelope in your satchel.', minSeconds: 2.5, nextLabel: 'Read the letter' },
+    { shot: 'letter', speaker: 'Aunt Wren’s letter', text: '', description: 'You unfold Aunt Wren’s letter at your workbench.', nextLabel: 'Fold the letter' },
+    { shot: 'fold-letter', speaker: '', text: '', description: 'You carefully fold Aunt Wren’s letter and place it at the top of your bag.', minSeconds: 3 },
   ],
 };
 

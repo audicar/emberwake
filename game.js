@@ -1,13 +1,13 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.2';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.2';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.2';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.2';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.2';
-import { drawWilds } from './wilds.js?v=0.5.2';
-import { BackgroundMusic } from './music.js?v=0.5.2';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.2';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.2';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.2';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.5.3';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.5.3';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.5.3';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.5.3';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.5.3';
+import { drawWilds } from './wilds.js?v=0.5.3';
+import { BackgroundMusic } from './music.js?v=0.5.3';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.5.3';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.5.3';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.5.3';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -74,22 +74,33 @@ function renderWorkshopText() {
   $('workshop-setting').textContent=WORKSHOP.setting;
   $('workshop-speaker').textContent=beat.speaker==='player'?state.name:beat.speaker;
   $('workshop-text').textContent=beat.text;
-  $('workshop-dialogue').classList.toggle('workshop-silent',beat.shot==='silence');
+  $('workshop-dialogue').classList.toggle('workshop-silent',['silence','fold-letter'].includes(beat.shot));
   $('workshop-canvas').parentElement.classList.toggle('workshop-wide',beat.shot==='establish');
   const readingNotice=beat.shot==='notice';
+  const readingLetter=beat.shot==='letter';
   $('workshop-notice').hidden=!readingNotice;
-  $('workshop-canvas').parentElement.classList.toggle('workshop-reading',readingNotice);
+  $('workshop-letter').hidden=!readingLetter;
+  $('workshop').classList.toggle('workshop-letter-open',readingLetter);
+  $('workshop-canvas').parentElement.classList.toggle('workshop-reading',readingNotice||readingLetter);
   if(readingNotice) {
     $('workshop-promotion-names').replaceChildren(...promotionNames(state.name).map(name=>{
       const item=document.createElement('li');item.textContent=name;return item;
     }));
+  }
+  if(readingLetter) {
+    $('workshop-letter-salutation').textContent=WORKSHOP.invitation.salutation;
+    $('workshop-letter-body').replaceChildren(...WORKSHOP.invitation.paragraphs.map((text,index)=>{
+      const p=document.createElement('p');p.textContent=text;if(index===1)p.className='invitation-key';return p;
+    }));
+    $('workshop-letter-signoff').textContent=WORKSHOP.invitation.signoff;
+    $('workshop-letter-signature').textContent=WORKSHOP.invitation.signature;
   }
   const hasPortrait=beat.speaker==='player'||beat.speaker==='Supervisor';
   $('workshop-portrait').hidden=!hasPortrait;
   $('workshop-dialogue').classList.toggle('has-workshop-portrait',hasPortrait);
   if(hasPortrait)drawWorkshopPortrait($('workshop-portrait'),beat.speaker==='player'?state.appearance:WORKSHOP.supervisor,beat.speaker==='player'?state.name:'the supervisor');
   $('workshop-description').textContent=beat.description||'';
-  $('workshop-canvas').setAttribute('aria-label',beat.shot==='establish'?'A wide view of the workplace: your character finishes an order, coworkers put away tools and collect coats, and the supervisor sits at a separate desk. Your character walks to the promotion notice.':beat.shot==='notice'?'The workshop promotion list. Your character’s name is missing.':beat.shot==='silence'?'Your character pauses while the supervisor walks away, then returns to the unfinished order.':'Your character speaks with the supervisor beside a workbench of completed orders.');
+  $('workshop-canvas').setAttribute('aria-label',beat.description||(beat.shot==='establish'?'A wide view of the workplace: your character finishes an order, coworkers put away tools and collect coats, and the supervisor sits at a separate desk. Your character walks to the promotion notice.':beat.shot==='notice'?'The workshop promotion list. Your character’s name is missing.':'Your character speaks with the supervisor beside a workbench of completed orders.'));
   updateWorkshopButton();
 }
 function updateWorkshopButton() {
@@ -97,7 +108,7 @@ function updateWorkshopButton() {
   const button=$('workshop-next'),ready=workshop.ready;
   if(button.disabled!==!ready)button.disabled=!ready;
   if(ready&&document.activeElement===$('workshop'))button.focus();
-  const label=!ready?'A moment…':workshop.isLast?'Continue to Hearthvale':'Continue';
+  const label=!ready?'A moment…':workshop.beat.nextLabel||(workshop.isLast?'Continue to Hearthvale':'Continue');
   if(button.textContent!==label)button.textContent=label;
 }
 function startWorkshop(step=WORKSHOP.order[0]) {
@@ -109,11 +120,7 @@ function finishWorkshop() {
   if(!workshop)return;
   workshop=null;state.workshopStep=null;state.insideHome=true;homeActor={...HOME_START,direction:'left',walk:0};
   $('game').inert=false;closeOverlays();refresh();save();
-  say('Some days later · Aunt Wren’s letter',[
-    'My love, you sounded tired in your last letter. Come spend the spring in Hearthvale. I’ll be travelling, and your old room is ready.',
-    'You don’t need to know what comes next before you get here.',
-    'Your cup’s by the kettle. With love, Aunt Wren',
-  ],null,'Make yourself at home');
+  toast('Some days later · Hearthvale. Your old cup is waiting by the kettle.');
 }
 function advanceWorkshop() {
   if(!workshop||!workshop.advance())return;

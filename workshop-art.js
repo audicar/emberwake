@@ -1,5 +1,6 @@
-import { drawCharacter } from './character.js?v=0.5.2';
-import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.2';
+import { drawCharacter } from './character.js?v=0.5.3';
+import { WORKSHOP, promotionNames } from './workshop-script.js?v=0.5.3';
+import { PALETTES } from './core.js?v=0.5.3';
 
 const WIDTH=384,HEIGHT=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(x,y,w,h);};
@@ -46,6 +47,23 @@ function coatRack(c,occupied) {
   r(c,308,78,44,3,'#8e9372');
   for(const x of [314,329,344]){r(c,x,78,2,6,'#baa579');r(c,x-1,83,2,1,'#baa579');}
   if(occupied){r(c,324,85,12,18,'#476b67');r(c,321,88,4,10,'#547a70');r(c,335,88,4,10,'#547a70');r(c,328,85,4,3,'#c0bea0');}
+}
+function foldedLetter(c,x,y,w=14,h=10) {
+  r(c,x,y,w,h,'#e8d9b9');r(c,x+1,y+1,w-2,h-2,'#f5e8cb');
+  r(c,x+2,y+3,Math.max(2,w-4),1,'#b6a082');r(c,x+w-4,y+1,2,2,'#9d7f73');
+}
+function satchel(c,open,invitation) {
+  r(c,206,165,20,3,'#5d4c3a');r(c,203,168,27,23,'#594936');
+  r(c,205,171,23,17,'#9d8058');r(c,208,174,17,12,'#b19366');
+  r(c,205,168,23,5,'#423e30');
+  if(invitation)foldedLetter(c,210,163);
+  r(c,205,174,23,5,open?'#836b4b':'#aa8960');r(c,214,178,5,4,'#d1b37b');r(c,216,179,1,2,'#6f5b41');
+  r(c,202,175,2,12,'#6f5a3e');r(c,229,174,2,13,'#6f5a3e');
+}
+function heldLetter(c,player,appearance,fold=0) {
+  const w=12-Math.round(fold*6),h=10-Math.round(fold*3),x=Math.round(player.x-w/2),y=player.y-16;
+  foldedLetter(c,x,y,w,h);
+  const skin=PALETTES.skin[appearance.skin];r(c,x-2,y+3,3,4,skin);r(c,x+w-1,y+3,3,4,skin);
 }
 function notice(c,state,includeText=true) {
   r(c,118,22,70,55,'#303d39');r(c,120,23,66,51,'#706b50');r(c,123,26,60,45,'#9a9470');
@@ -107,15 +125,37 @@ export function drawWorkshop(c,sequence,state,reducedMotion=false) {
     player={x:167-walk*8,y:151+walk*8,direction:t<1.3?'right':t<2.4?'left':'down',walk:walk>0&&walk<1?t*10:0};
     const away=Math.min(1,t/1.6);boss={x:232+away*57,y:149-away*17,direction:away<1?'right':'down',walk:away<1?t*8:0};
   }
+  const letterShots=['find-letter','letter','fold-letter'];
+  if(letterShots.includes(beat.shot)) {
+    boss={x:289,y:132,direction:'down',walk:0};
+    if(beat.shot==='find-letter') {
+      const walk=Math.min(1,Math.max(0,(t-.5)/1.2));
+      player={x:159+walk*34,y:159+walk*8,direction:walk<1?'right':'down',walk:walk>0&&walk<1?t*9:0};
+    } else player={x:193,y:167,direction:'down',walk:0};
+  }
   drawCharacter(f,boss.x,boss.y,WORKSHOP.supervisor,boss.direction,boss.walk);
-  drawCharacter(f,player.x,player.y,state.appearance,player.direction,player.walk);
+  const bagInsert=beat.shot==='fold-letter'&&t>=1.15;
+  if(!bagInsert)drawCharacter(f,player.x,player.y,state.appearance,player.direction,player.walk);
   sharedBench(f);desk(f);workbench(f);
+  const invitationInBag=beat.shot==='find-letter'?t<1.8:beat.shot==='letter'?false:beat.shot==='fold-letter'?t>=2.1:true;
+  satchel(f,letterShots.includes(beat.shot),invitationInBag);
+  if(beat.shot==='letter'||(beat.shot==='find-letter'&&t>=1.8))heldLetter(f,player,state.appearance);
+  if(beat.shot==='fold-letter') {
+    if(t<1.15)heldLetter(f,player,state.appearance,Math.min(1,t/1.1));
+    else if(t<2.1) {
+      const lower=Math.min(1,(t-1.15)/.95),y=Math.round(156+lower*7);
+      foldedLetter(f,210,y);const skin=PALETTES.skin[state.appearance.skin];
+      r(f,208,y-5,4,6,skin);r(f,209,y,4,3,skin);
+    } else if(t<2.8) {
+      const y=Math.round(158-(t-2.1)*20);r(f,208,y-5,4,6,PALETTES.skin[state.appearance.skin]);
+    }
+  }
   if((beat.shot==='silence'&&t>2.5)||(beat.shot==='establish'&&t<2.8)) {
     // The small movement of a tool is the only reply to the final request.
     r(f,155+Math.floor(t*6)%2,146,7,1,'#cbb888');
   }
-  const shots={establish:{x:192,y:108,zoom:1},notice:{x:153,y:88,zoom:1.75},conversation:{x:202,y:126,zoom:1.65},request:{x:202,y:126,zoom:1.65},silence:{x:191,y:134,zoom:1.8}};
-  const camera=shots[beat.shot],sw=Math.round(WIDTH/camera.zoom),sh=Math.round(HEIGHT/camera.zoom),sx=Math.round(camera.x-sw/2),sy=Math.round(camera.y-sh/2);
+  const shots={establish:{x:192,y:108,zoom:1},notice:{x:153,y:88,zoom:1.75},conversation:{x:202,y:126,zoom:1.65},request:{x:202,y:126,zoom:1.65},silence:{x:191,y:134,zoom:1.8},'find-letter':{x:185,y:151,zoom:2},letter:{x:193,y:151,zoom:2.25},'fold-letter':{x:193,y:151,zoom:2.25}};
+  const camera=bagInsert?{x:215,y:176,zoom:4.5}:shots[beat.shot],sw=Math.round(WIDTH/camera.zoom),sh=Math.round(HEIGHT/camera.zoom),sx=Math.round(camera.x-sw/2),sy=Math.round(camera.y-sh/2);
   c.imageSmoothingEnabled=false;c.clearRect(0,0,c.canvas.width,c.canvas.height);c.drawImage(frame,sx,sy,sw,sh,0,0,c.canvas.width,c.canvas.height);
   // Pixel-stepped shadows frame the scene without blurring the sprite edges.
   for(let edge=0;edge<3;edge++){r(c,edge*3,0,3,HEIGHT,`rgba(15,25,27,${.12-edge*.025})`);r(c,WIDTH-(edge+1)*3,0,3,HEIGHT,`rgba(15,25,27,${.12-edge*.025})`);}

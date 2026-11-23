@@ -58,7 +58,7 @@ export function validateSave(value) {
   }
   if (s.homecoming && !s.guardianFreed) throw new Error('The saved homecoming is invalid.');
   if(value.workshopStep!==undefined&&value.workshopStep!==null) {
-    if(!Number.isInteger(value.workshopStep)||value.workshopStep<0||value.workshopStep>6)throw new Error('The saved opening scene is invalid.');
+    if(!Number.isInteger(value.workshopStep)||value.workshopStep<0||value.workshopStep>9)throw new Error('The saved opening scene is invalid.');
     s.workshopStep=value.workshopStep;
   }
   if (s.guardianFreed && !s.dragonBonded) throw new Error('The saved dragon bond is invalid.');

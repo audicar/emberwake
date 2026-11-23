@@ -274,3 +274,22 @@
   .workshop-dialogue { min-height: 100px; padding: 12px 18px; }
   .workshop-lines p { font-size: 17px; margin-top: 5px; }
 }
+
+.workshop-letter { width: min(480px,calc(100% - 40px)); padding: 24px 34px; text-align: left; }
+.workshop-letter:before { display: none; }
+.workshop-letter p { margin: 0 0 14px; font: 20px/1.45 Georgia,serif; }
+.workshop-letter .letter-salutation { font-style: italic; font-size: 22px; }
+.workshop-letter .invitation-key { font-style: italic; color: #36513c; }
+.workshop-letter .letter-signature { margin: 4px 0 0; font-style: italic; }
+.letter-signature span { display: block; }
+.workshop-letter-open .workshop-dialogue { min-height: 64px; padding: 14px 20px; flex-direction: row; align-items: center; }
+.workshop-letter-open .workshop-lines { align-self: center; }
+.workshop-letter-open .workshop-lines p { display: none; }
+.workshop-letter-open .workshop-continue { align-self: center; }
+@media (max-width: 600px) {
+  .workshop-letter { padding: 20px 22px; }
+  .workshop-letter p { font-size: 18px; margin-bottom: 12px; }
+  .workshop-letter .letter-salutation { font-size: 21px; }
+  .workshop-letter-open .workshop-dialogue { gap: 12px; padding: 12px 16px; }
+  .workshop-letter-open .workshop-lines .eyebrow { font-size: 9px; letter-spacing: 1px; }
+}

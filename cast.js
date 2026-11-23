@@ -1,4 +1,4 @@
-import { drawCharacter } from './character.js?v=0.4.3';
+import { drawCharacter } from './character.js?v=0.4.4';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {

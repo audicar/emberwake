@@ -38,3 +38,9 @@ test('saving indoors keeps the player indoors while older saves remain outdoors'
   delete s.insideHome;assert.equal(validateSave(s).insideHome,false);
   assert.throws(()=>validateSave({...s,insideHome:'yes'}));
 });
+test('visible tabletops, chair backs and bookcases block movement from above',()=>{
+  for(const p of [{x:390,y:340},{x:390,y:355},{x:390,y:375},{x:385,y:396},{x:256,y:305},{x:256,y:325},{x:555,y:317}]) {
+    assert.equal(homeBlocked(p.x,p.y),true,`visible furniture at ${p.x},${p.y} must be solid`);
+  }
+  for(const p of [{x:390,y:330},{x:441,y:350},{x:335,y:350}])assert.equal(homeBlocked(p.x,p.y),false,'passages around the table remain clear');
+});

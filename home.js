@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.4.3';
-import { drawDragon } from './dragon.js?v=0.4.3';
+import { drawCharacter } from './character.js?v=0.4.4';
+import { drawDragon } from './dragon.js?v=0.4.4';
 
 export const HOME_ENTRY = { x: 416, y: 463 };
 export const HOME_START = { x: 445, y: 379 };
@@ -8,11 +8,18 @@ export const HOME_BED = { x: 555, y: 328 };
 const bed = { x: 520, y: 215, w: 70, h: 96 };
 const wardrobe = { x: 236, y: 226, w: 64, h: 45 };
 const kitchen = { x: 323, y: 222, w: 82, h: 23 };
-const bookcase = { x: 236, y: 332, w: 43, h: 43 };
+const bookcase = { x: 236, y: 352, w: 43, h: 43 };
 const table = { x: 351, y: 350, w: 74, h: 39 };
 const chair = { x: 371, y: 402, w: 30, h: 27 };
 const plant = { x: 565, y: 423, w: 23, h: 22 };
-const furniture = [bed, wardrobe, kitchen, bookcase, table, chair, plant];
+// Include raised surfaces and chair backs: stopping only at their feet lets
+// the player stand on the visible furniture when approaching from above.
+const furniture = [
+  {...bed,y:bed.y-17,h:bed.h+25},wardrobe,kitchen,
+  {...bookcase,y:bookcase.y-49,h:bookcase.h+52},
+  {...table,y:table.y-12,h:table.h+12},
+  {...chair,y:chair.y-8,h:chair.h+11},plant,
+];
 export function homeBlocked(x,y) {
   return x<226||x>606||y<229||y>478||furniture.some(o=>x>o.x-5&&x<o.x+o.w+5&&y>o.y-3&&y<o.y+o.h+3);
 }

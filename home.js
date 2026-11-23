@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.4.4';
-import { drawDragon } from './dragon.js?v=0.4.4';
+import { drawCharacter } from './character.js?v=0.4.5';
+import { drawDragon } from './dragon.js?v=0.4.5';
 
 export const HOME_ENTRY = { x: 416, y: 463 };
 export const HOME_START = { x: 445, y: 379 };
@@ -34,8 +34,8 @@ export function homeInteraction(actor) {
     {x:416,y:474,type:'exit',label:'Step outside',reach:34},
     {...wardrobe,type:'wardrobe',label:'Open your wardrobe',reach:22},
     {...kitchen,type:'kettle',label:'Put the kettle on',reach:22},
-    {...bookcase,type:'books',label:'Browse Wren’s books',reach:22},
-    {...table,type:'notes',label:'Read Wren’s note',reach:22},
+    {...bookcase,type:'books',label:'Browse Aunt Wren’s books',reach:22},
+    {...table,type:'notes',label:'Read Aunt Wren’s note',reach:22},
   ];
   return targets.map(t=>({...t,distance:distanceTo(actor,t)})).filter(t=>t.distance<t.reach).sort((a,b)=>a.distance-b.distance)[0];
 }

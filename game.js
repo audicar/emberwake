@@ -1,11 +1,11 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.4';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.4';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.4';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.4';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.4';
-import { drawWilds } from './wilds.js?v=0.4.4';
-import { BackgroundMusic } from './music.js?v=0.4.4';
-import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.4';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.5';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.5';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.5';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.5';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.5';
+import { drawWilds } from './wilds.js?v=0.4.5';
+import { BackgroundMusic } from './music.js?v=0.4.5';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.5';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -72,16 +72,16 @@ function offerExpedition() {
   if(!state.awakened) return toast('The southern trail is overgrown. Follow the main story to the old shrine.');
   closeOverlays();
   say('Briarwood trail', state.dragonBonded ? [
-    'Your hatchling looks towards the trees. Wren’s blade is at your side. Take the woodland trail?',
+    'Your hatchling looks towards the trees. Aunt Wren’s blade is at your side. Take the woodland trail?',
   ] : [
-    'A small cry carries through the trees. Beside the trail is a satchel with your aunt’s old practice blade and a note: “For brambles. And whatever is tangling them.”',
+    'A small cry carries through the trees. Beside the trail is a satchel with Aunt Wren’s old practice blade and a note: “For brambles. And whatever is tangling them.”',
     'In Briarwood, Z swings your blade, X dodges and C calls your dragon once you have made a bond. You can head home from the trail lantern or the menu.',
   ], startExpedition, 'Take the trail');
 }
 function enterHome() {
   state.insideHome=true;homeActor = { ...HOME_ENTRY, direction: 'up', walk: 0 }; keys.clear(); refresh(); save(); world.focus();
   if(activeMainQuest(state)?.[0]==='homecoming')say('A place for two',[
-    'The hatchling stops on the threshold. You carry Wren’s spare blanket to a quiet corner and fold it twice, leaving a little hollow in the middle.',
+    'The hatchling stops on the threshold. You carry Aunt Wren’s spare blanket to a quiet corner and fold it twice, leaving a little hollow in the middle.',
     'It circles the blanket, glances up at you, and settles with its nose beneath one wing. A tiny curl of smoke rises. You put a second cup beside the kettle.',
   ],()=>{state.homecoming=true;save();refresh();},'Welcome home');
 }
@@ -93,13 +93,13 @@ function interactHome() {
   if(!target)return toast('Your bed is on the east side. The wardrobe is in the north-west corner.');
   if(target.type==='exit')return leaveHome();
   if(target.type==='wardrobe')return openCreator(true);
-  if(target.type==='bed')return say('Your bed',[state.homecoming ? 'From the blanket in the corner comes a small, contented snore. You pull up the quilt. Rest until morning?' : 'The quilt still has the crooked star you stitched into it years ago. Wren mended carefully around it. Rest until morning?'],()=>{
+  if(target.type==='bed')return say('Your bed',[state.homecoming ? 'From the blanket in the corner comes a small, contented snore. You pull up the quilt. Rest until morning?' : 'The quilt still has the crooked star you stitched into it years ago. Aunt Wren mended carefully around it. Rest until morning?'],()=>{
     state.day++;state.minutes=420;homeActor={...HOME_BED,direction:'down',walk:0};
     toast(state.plots.some((_,i)=>isGrown(state,i))?'Morning light. Your moonroot has grown.':'Morning light and a warm cottage.');
   },'Sleep until morning');
-  if(target.type==='kettle')return say('The kitchen',['The kettle is warm. Wren left your old cup at the front of the shelf. Its handle still has the little chip you remember.']);
-  if(target.type==='books')return say('Wren’s books',['Gardening, weather, mending. Almost every page has a small note in the margin. Between two well-thumbed almanacs is a thin green book: “On Listening to Dragons”.']);
-  if(target.type==='notes')return say('Wren’s note',['“I mended the quilt and left the crooked star. You worked so hard on that stitch. Moonroot needs water and a night’s sleep; leave the starflowers until your first harvest. There’s room here for whoever comes home with you. — Wren”']);
+  if(target.type==='kettle')return say('The kitchen',['The kettle is warm. Aunt Wren left your old cup at the front of the shelf. Its handle still has the little chip you remember.']);
+  if(target.type==='books')return say('Aunt Wren’s books',['Gardening, weather, mending. Almost every page has a small note in the margin. Between two well-thumbed almanacs is a thin green book: “On Listening to Dragons”.']);
+  if(target.type==='notes')return say('Aunt Wren’s note',['“I mended the quilt and left the crooked star. You worked so hard on that stitch. Moonroot needs water and a night’s sleep; leave the starflowers until your first harvest. There’s room here for whoever comes home with you. — Aunt Wren”']);
 }
 function openOverlay(id) {
   if (!overlays.some(key => !$(key).hidden)) previousFocus = document.activeElement;
@@ -284,7 +284,7 @@ $('character-form').onsubmit = event => {
   $('character-name').setCustomValidity('');
   if(editing){state.name=name;state.appearance={...draft};closeOverlays();save();toast('A fresh look. Still very much you.');}
   else {state=newState(draft);state.x=160;state.y=243;state.insideHome=true;encounter=null;homeActor={...HOME_START,direction:'left',walk:0};villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();save();say('A letter left on the kitchen table',[
-    `${name}, the cottage is yours. I put your old cup back by the kettle and mended the quilt. Rowan said he’d help with the garden. He’ll pretend he hasn’t been waiting for you.`,
+    `${name}, the cottage is yours. I put your old cup back by the kettle and mended the quilt. My friend’s nephew, Rowan, has offered to help with the garden. You’ll find him just south of the square.`,
     'One small thing: if you hear the mountain dreaming, don’t be frightened. It has been waiting a very long time for someone who can listen.',
     'For now, just find your feet. Rowan is by the garden, a little south of the square. — With love, Aunt Wren',
   ],null,'Make yourself at home');}
@@ -336,15 +336,16 @@ function interact() {
   if(t.type==='trail') return offerExpedition();
   if(t.type==='rowan'){
     if(!state.metRowan)say('rowan',[
-      `You must be ${state.name}. Wren said you’d come. Here — three moonroot seeds and a watering can. A decent beginning, I reckon.`,
+      `You must be ${state.name}. I’m Rowan. My aunt’s a friend of your Aunt Wren. She asked if I could help you get settled.`,
+      'I brought seeds and a watering can. I wasn’t sure what you’d want to grow, so I picked something easy. Here — these are yours.',
       'The three dark beds just beside me are yours. Plant a seed, water it, then go inside your cottage and rest in the bed. Moonroot only needs one good night.',
-      'And those pale starflowers? Pick a few if you see them. Wren used to take three to the old shrine across the bridge. Said the hill slept easier afterwards.',
+      'And those pale starflowers? Pick a few if you see them. Aunt Wren used to take three to the old shrine across the bridge. Said the hill slept easier afterwards.',
     ],()=>{state.metRowan=true;state.seeds=3;toast('Received: 3 moonroot seeds and a watering can.');});
     else say('rowan', [state.awakened?'The garden’s doing well. So’s the mountain, by the sound of it. Funny how those things go together.':!state.harvested?'Plant, water, sleep. You can’t hurry a moonroot. Cottage is north-west, with the red roof.':'A fine first harvest. Take a moonroot and three starflowers to the shrine, over the eastern bridge. If you feel like it.']);
   }
   if(t.type==='mira') {state.metMira=true;say('mira', [state.awakened?'I heard a noise from the hill last night. Rather like a very large cat purring. I suppose we’re keeping it?':'Welcome! My wardrobe’s always open — just walk up to the blue-roofed cottage. Everyone deserves clothes that feel like themselves.']);}
   if(t.type==='tailor')openCreator(true);
-  if(t.type==='flower'){if(!state.harvested)return say('A starflower',['The flower holds a little warmth. Wren’s note said to leave these growing until your first harvest.']);state.flowers.push(t.id);toast(`Starflower gathered · ${state.flowers.length}/3. A little warm against your palm.`);}
+  if(t.type==='flower'){if(!state.harvested)return say('A starflower',['The flower holds a little warmth. Aunt Wren’s note said to leave these growing until your first harvest.']);state.flowers.push(t.id);toast(`Starflower gathered · ${state.flowers.length}/3. A little warm against your palm.`);}
   if(t.type==='plot')toast(tend(state,t.id));
   if(t.type==='home')return enterHome();
   if(t.type==='shrine'){

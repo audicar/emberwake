@@ -2,7 +2,7 @@ const ITEMS = [
   { id: 'seeds', name: 'Moonroot seeds', kind: 'For the garden', description: 'Plant in an empty bed beside Rowan, then water it. A night’s sleep at your cottage gives it time to grow.' },
   { id: 'moonroot', name: 'Moonroot', kind: 'Freshly harvested', description: 'A small, pale root, warm against your palm. The old shrine across the bridge has a bowl just its size.' },
   { id: 'starflowers', name: 'Starflowers', kind: 'From the meadow', description: 'Pale flowers growing around the village and meadow. Gather three for an offering at the old shrine.' },
-  { id: 'blade', name: 'Wren’s blade', kind: 'For the woodland trail', description: 'A well-kept practice blade from your aunt. Hold Z to attack, face your target with the movement keys, and use X to dodge.' },
+  { id: 'blade', name: 'Aunt Wren’s blade', kind: 'For the woodland trail', description: 'A well-kept practice blade from Aunt Wren. Hold Z to attack, face your target with the movement keys, and use X to dodge.' },
   { id: 'watering-can', name: 'Watering can', kind: 'A trusty tool', description: 'A gift from Rowan. Use it beside a planted garden bed with E. It never runs dry.' },
 ];
 

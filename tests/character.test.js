@@ -72,3 +72,31 @@ test('each hairstyle has a distinct rear silhouette without a front-facing face'
     for(let y=-33;y<=-24;y++)for(let x=-6;x<6;x++)assert.notEqual(pixels.get(`${x},${y}`),PALETTES.skin[a.skin],'rear crown must cover the head');
   }
 });
+
+test('profile styles and garments remain distinct across the full skin palette', () => {
+  for(let skin=0;skin<PALETTES.skin.length;skin++)for(let gender=0;gender<2;gender++)for(const direction of ['left','right']) {
+    const a=newState({skin,gender,accessory:0}).appearance;
+    for(const key of ['hairStyle','outfit']) {
+      const views=STYLES[key].map((_,index)=>JSON.stringify(render({...a,[key]:index},direction)));
+      assert.equal(new Set(views).size,STYLES[key].length,`${key} must remain distinct in ${direction} profile on skin ${skin}`);
+    }
+  }
+});
+
+test('profile clothing has less depth than the front-facing shoulders', () => {
+  const width=(pixels,y)=>{const xs=pixels.filter(([key])=>Number(key.split(',')[1])===y).map(([key])=>Number(key.split(',')[0]));return Math.max(...xs)-Math.min(...xs)+1;};
+  for(let gender=0;gender<2;gender++)for(let outfit=0;outfit<STYLES.outfit.length;outfit++) {
+    const a=newState({gender,outfit,hairStyle:1,accessory:0}).appearance;
+    for(const direction of ['left','right']) assert.ok(width(render(a,direction),-16)<width(render(a,'down'),-16),'the profile must turn the torso rather than retain the front-facing shoulders');
+  }
+});
+
+test('profile bangs overlap the forehead and the nose projects beyond the cheek', () => {
+  for(let skin=0;skin<PALETTES.skin.length;skin++)for(let hairStyle=0;hairStyle<STYLES.hairStyle.length;hairStyle++)for(const direction of ['left','right']) {
+    const a=newState({skin,hairStyle,accessory:0}).appearance,pixels=new Map(render(a,direction));
+    const x=value=>direction==='right'?value:-value-1;
+    assert.equal(pixels.get(`${x(4)},-30`),PALETTES.hair[a.hair],'the fringe must extend over the profile forehead');
+    assert.equal(pixels.get(`${x(8)},-24`),PALETTES.skin[skin],'a visible nose must project in front of the cheek');
+    assert.equal(pixels.get(`${x(8)},-22`),undefined,'the nose must have a distinct silhouette above the inset mouth and chin');
+  }
+});

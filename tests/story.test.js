@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newState, activeMainQuest, completedMainQuests, awaken } from '../core.js';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction } from '../home.js';
+import { newState, validateSave, activeMainQuest, completedMainQuests, awaken } from '../core.js';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction } from '../home.js';
 
 test('the main story exposes one consequential quest at a time',()=>{
   const s=newState(),current=()=>activeMainQuest(s)?.[0]??null;
@@ -19,10 +19,22 @@ test('older out-of-order progress does not expose multiple active story quests',
   const s=newState();s.dragonBonded=true;s.guardianFreed=true;
   assert.equal(activeMainQuest(s)[0],'metRowan');assert.equal(completedMainQuests(s).length,0);
 });
-test('the cottage bed, wardrobe and exit can be reached from the front door',()=>{
+test('cottage furniture and both sides of the bed are reachable from the front door',()=>{
   const queue=[[HOME_ENTRY.x,HOME_ENTRY.y]],seen=new Set([`${HOME_ENTRY.x},${HOME_ENTRY.y}`]);
   for(let head=0;head<queue.length;head++){const [x,y]=queue[head];for(const [dx,dy] of [[4,0],[-4,0],[0,4],[0,-4]]){const nx=x+dx,ny=y+dy,key=`${nx},${ny}`;if(!seen.has(key)&&!homeBlocked(nx,ny)){seen.add(key);queue.push([nx,ny]);}}}
-  for(const p of [HOME_BED,{x:274,y:244},{x:416,y:474}])assert.ok(queue.some(([x,y])=>Math.hypot(x-p.x,y-p.y)<15));
+  const access=[HOME_START,HOME_BED,{x:508,y:270},{x:602,y:270},{x:268,y:288},{x:296,y:352},{x:365,y:259},{x:441,y:370},{x:416,y:474}];
+  for(const p of access)assert.ok(!homeBlocked(p.x,p.y)&&queue.some(([x,y])=>Math.hypot(x-p.x,y-p.y)<5),`furniture access at ${p.x},${p.y} must be clear and reachable`);
   assert.equal(homeInteraction(HOME_BED).type,'bed');assert.equal(homeInteraction(HOME_ENTRY).type,'exit');
+  for(const p of [{x:508,y:270},{x:602,y:270}])assert.equal(homeInteraction(p).type,'bed','the bed works from either side');
+  assert.equal(homeInteraction({x:268,y:288}).type,'wardrobe');
+  assert.equal(homeInteraction({x:296,y:352}).type,'books');
+  assert.equal(homeInteraction({x:365,y:259}).type,'kettle');
+  assert.equal(homeInteraction({x:441,y:370}).type,'notes');
   assert.equal(homeBlocked(568,240),true,'the bed is solid furniture');
+});
+test('saving indoors keeps the player indoors while older saves remain outdoors',()=>{
+  const s=newState();s.insideHome=true;
+  assert.equal(validateSave(JSON.parse(JSON.stringify(s))).insideHome,true);
+  delete s.insideHome;assert.equal(validateSave(s).insideHome,false);
+  assert.throws(()=>validateSave({...s,insideHome:'yes'}));
 });

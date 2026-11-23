@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.4.1';
+import { PALETTES } from './core.js?v=0.4.2';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
@@ -32,17 +32,98 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
   // Hair behind the body: each style has its own outline and strand clusters.
   const lock = (x, y, w, h) => { r(x,y,w,h,hairDark);r(x+1,y,w-2,h-2,hair);r(x+1,y+2,1,Math.max(1,h-5),hairLight); };
   if (side) {
-    // The profile faces right before mirroring: loose hair and ties sit at the nape.
-    if ([2,4,9].includes(style)) {
-      lock(-10,-32,11,22);
-      if (style !== 2) { lock(-12,-23,6,13); lock(-10,-14,5,6); }
+    // A true profile: the skull, nape and clothing share a narrow centreline.
+    // The far limbs sit behind the body; only the near shoulder is prominent.
+    const long = [2,4,9].includes(style), cropped = [1,10].includes(style);
+    if (long) {
+      lock(-9,-32,8,22);
+      if (style !== 2) { lock(-11,-25,5,13); lock(-9,-15,5,6); }
     }
+    if ([5,6].includes(style)) lock(-9,-27,5,17);
+    if (style === 6) lock(-11,-26,4,16);
+    if (style === 7) { lock(-13,-33,7,16); lock(-12,-20,5,10); r(-9,-32,3,2,cloth); }
+    if (style === 11) { lock(-13,-32,6,17); lock(-10,-30,5,17); r(-10,-32,3,2,cloth); }
+
+    // Legs overlap in an idle pose and separate horizontally while walking.
+    const leg = (lx, far) => {
+      r(lx,-9,3,8,far?shadow:skin);r(lx,-3,3,2,cream);
+      r(lx-1,-1,6,2,ink);r(lx-1,-2,6,2,far?tint(boot,-.12):boot);
+      if(!far)r(lx+2,-2,2,1,'#bb9480');
+    };
+    leg(-2-stride,true);leg(stride,false);
+    const depth = female?4:5, waistDepth=female?3:4;
+    r(-depth,-21,depth+4,4,clothDark);r(-depth+1,-21,depth+3,3,cloth);
+    r(-waistDepth,-18,waistDepth+4,10,clothDark);r(-waistDepth+1,-18,waistDepth+2,10,cloth);
+    r(-1,-24,4,4,faceShade);r(0,-24,3,4,skin);
+    const profileSkirt = (length=8) => {
+      for(let row=0;row<length;row++) {
+        const flare=Math.floor(row/3),left=-waistDepth-flare,width=waistDepth+4+flare*2;
+        r(left,-14+row,width,1,clothDark);r(left+1,-14+row,width-2,1,cloth);
+      }
+      r(1,-13,1,length-2,clothLight);
+    };
+    if (outfit===0) {
+      r(-3,-19,6,11,cloth);r(2,-21,1,10,clothDark);r(2,-17,1,1,cream);
+      r(1,-13,3,3,clothDark);r(1,-13,2,2,clothLight);
+      r(-3,-8,7,3,cloth);r(-3,-5,7,1,clothLight);
+    } else if (outfit===1) {
+      r(-waistDepth,-12,waistDepth+4,2,'#8e6e58');r(3,-12,1,2,'#e4c58d');
+      r(-3,-13,3,5,'#a58360');r(-2,-12,2,1,'#c4a47c');
+    } else {
+      profileSkirt(outfit===5?10:9);
+      if ([2,3,4,5,7].includes(outfit)) {r(-depth,-21,depth+4,5,cream);r(3,-20,1,3,'#e7dac5');}
+      if (outfit===2) {r(-waistDepth,-15,waistDepth+4,2,cream);r(-5,-6,11,1,cream);}
+      if (outfit===3) {
+        r(2,-21,1,8,clothDark);r(1,-18,2,5,cloth);r(2,-15,1,1,cream);
+        r(1,-10,4,4,cream);r(2,-10,2,3,'#eee2ce');r(-5,-6,11,1,cream);
+        r(3,-9,1,2,'#b5b991');r(2,-9,1,1,'#dca4a6');
+      }
+      if (outfit===4) {r(2,-21,2,3,'#d7c4b1');r(3,-18,1,3,'#bda28c');r(-waistDepth,-14,waistDepth+4,1,'#7b645d');}
+      if (outfit===5) {r(-waistDepth,-15,waistDepth+4,2,cream);r(2,-15,2,2,'#f4d3cb');r(-2,-10,2,2,cream);r(3,-8,2,2,cream);r(-6,-5,13,1,cream);}
+      if (outfit===6) {r(-depth,-21,depth+4,10,clothDark);r(-depth+1,-20,depth+2,8,cloth);r(3,-20,1,8,cream);r(2,-20,1,8,clothLight);r(2,-16,1,1,'#ffe4b2');}
+      if (outfit===7) {r(2,-21,2,4,cream);r(3,-19,2,1,'#d58f91');r(3,-18,1,4,'#d58f91');r(-5,-6,11,1,cream);}
+    }
+    // The near arm overlaps the side seam instead of framing both body edges.
+    const armX=-1-stride;
+    r(armX-1,-20,4,6,clothDark);r(armX,-20,2,5,[3,4,5,7].includes(outfit)?cream:clothLight);
+    r(armX,-14,3,5,faceShade);r(armX,-14,2,4,skin);r(armX,-10,2,1,light);
+
+    // Rounded forehead, small projecting nose and a softly tucked-in chin.
+    // No far-side ear or rectangular front-facing cheek is visible here.
+    r(-5,-35,9,12,faceShade);r(-3,-34,9,11,skin);r(-2,-32,8,9,skin);
+    r(-1,-31,5,4,faceLight);r(6,-26,1,3,skin);r(7,-25,1,2,skin);r(8,-24,1,1,skin);
+    r(-1,-23,7,2,skin);r(0,-21,5,1,skin);r(0,-20,3,1,skin);
+    r(3,-28,3,4,ink);r(3,-28,1,2,'#fff8e5');r(4,-25,1,1,'#8e7674');
+    if(female)r(4,-29,2,1,ink);
+    r(1,-23,2,1,cheek);r(4,-22,1,1,lip);
+
+    // The crown flows down into the nape, with a small curved fringe above the eye.
+    r(-5,-39,7,1,hairDark);r(-7,-38,11,2,hairDark);r(-8,-36,13,6,hairDark);
+    r(-6,-37,9,3,hair);r(-7,-35,11,4,hair);r(-7,-31,7,4,hair);
+    r(-5,-37,6,1,hairLight);r(-6,-35,3,1,hairShine);r(0,-34,3,1,hairLight);
+    r(1,-32,5,1,hair);r(2,-31,4,1,hair);r(3,-30,3,1,hair);r(-2,-31,3,2,hair);
+    lock(-8,-30,5,cropped?6:10);
+    // The ear bridges the nape and cheek without a dark vertical sideburn.
+    r(-2,-27,2,4,faceShade);r(-2,-26,2,2,skin);
+    if (style===0) {r(-7,-23,4,3,hair);r(-6,-23,1,2,hairLight);}
+    if (long) {lock(-7,-25,4,14);if(style!==2){r(-9,-21,2,5,hairLight);r(-8,-13,3,2,hair);}}
     if ([5,6].includes(style)) {
-      if (style === 6) lock(-11,-25,4,17);
-      lock(-8,-27,5,16);
+      for(let j=0;j<5;j++){const bx=-6+j%2;r(bx,-23+j*3,4,4,hairDark);r(bx,-23+j*3,3,2,hairLight);r(bx+1,-22+j*3,2,2,hair);}
+      r(-5,-8,3,2,cloth);r(-4,-6,2,2,hair);
     }
-    if (style === 7) { lock(-14,-32,8,18); lock(-14,-20,6,10); r(-10,-32,4,3,cloth); }
-    if (style === 11) { lock(-12,-32,6,18); lock(-15,-30,6,15); r(-12,-31,4,3,cloth); }
+    if (style===3) for(const [px,py] of [[-8,-36],[-6,-40],[-1,-40],[-9,-30],[-8,-25]]){r(px,py,4,5,hairDark);r(px,py,3,3,hair);r(px,py,2,1,hairLight);}
+    if (style===8) {lock(-12,-39,7,8);r(-10,-40,4,6,hair);r(-10,-38,3,1,hairLight);r(-10,-32,4,2,cloth);lock(-6,-41,5,5);}
+    if (style===9) {r(-6,-30,4,2,cloth);r(-6,-28,1,3,hairShine);}
+    if (style===10) {r(0,-32,3,2,hair);r(1,-30,2,1,hair);r(-2,-32,3,1,hairLight);}
+
+    // Accessories follow the same profile plane, with the scarf below the chin.
+    if(a.accessory===1){r(-2,-20,6,2,'#e5b889');r(2,-18,2,6,'#e5b889');r(3,-18,1,5,'#f8d8a6');}
+    if(a.accessory===2){r(-10,-36,19,2,'#aa8056');r(-11,-37,21,2,'#f1d49b');r(-7,-41,13,5,'#e9c58b');r(-5,-42,9,2,'#f4dba6');r(-7,-37,13,2,clothDark);}
+    if(a.accessory===3){r(-10,-34,3,3,clothDark);r(-6,-34,3,3,clothDark);r(-10,-34,2,2,clothLight);r(-5,-34,2,2,clothLight);r(-7,-33,2,2,cream);r(-7,-31,2,4,cloth);}
+    if(a.accessory===4){for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2]])r(-4+dx,-32+dy,2,2,'#ffefda');r(-4,-32,2,2,'#e4b171');r(-3,-29,2,1,'#a9b78b');}
+    if(a.accessory===5){r(-7,-39,13,3,clothDark);r(-6,-41,10,3,cloth);r(-3,-42,6,2,clothLight);r(-8,-36,15,2,clothDark);}
+    c.restore();
+    return;
   } else if (!back) {
     if ([2,4,9].includes(style)) {
       lock(-10,-32,20,22);lock(-11,-24,5,13);lock(6,-24,5,13);
@@ -59,9 +140,9 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
   }
 
   // Body construction changes shoulder width, waist, hips and leg spacing.
-  const shoulder = side ? (female?5:6) : female?7:9;
-  const waist = side ? 4 : female?5:7;
-  const hip = side ? 5 : female?7:6;
+  const shoulder = female?7:9;
+  const waist = female?5:7;
+  const hip = female?7:6;
   for (const [lx, shift] of [[-5,stride],[1,-stride]]) {
     r(lx,-8+shift,4,7,shadow);r(lx+1,-8+shift,2,6,skin);
     r(lx,-3+shift,4,2,cream);r(lx-1,-1+shift,5,2,ink);r(lx-1,-2+shift,5,2,boot);r(lx,-2+shift,2,1,'#bb9480');
@@ -124,14 +205,9 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     r(-6,-22,12,2,skin);r(-4,-20,8,1,skin);r(-2,-19,4,1,faceShade);
     r(-6,-32,8,6,faceLight);
     r(-9,-28,2,5,faceShade);r(7,-28,2,5,faceShade);r(-9,-27,1,2,skin);r(8,-27,1,2,skin);
-    if (side) {
-      r(3,-28,3,4,ink);r(3,-28,1,2,'#fff8e5');r(4,-25,1,1,'#8e7674');
-      r(7,-25,2,2,skin);r(5,-21,2,1,lip);r(1,-23,2,1,cheek);
-      if(female)r(5,-29,2,1,ink);
-    } else {
+
       for(const eye of [-6,3]){r(eye,-28,3,4,ink);r(eye,-28,1,2,'#fff8e5');r(eye+1,-25,1,1,'#8e7674');if(female)r(eye-1,-29,4,1,ink);}
       r(-6,-23,2,1,cheek);r(4,-23,2,1,cheek);r(0,-24,1,1,faceShade);r(-1,-21,2,1,lip);
-    }
   }
   if (back) {
     // Rear silhouettes are complete layers over the clothing, without a fringe.
@@ -204,33 +280,6 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
       r(-12,-17,4,3,hair); r(8,-17,4,3,hair);
       r(-12,-32,4,2,cloth); r(8,-32,4,2,cloth);
     }
-  } else if (side) {
-    // Keep the forehead, eye and nose exposed; the near lock falls behind the ear.
-    r(-2,-27,3,5,faceShade); r(-1,-26,2,3,skin);
-    // A swept fringe wraps around the profile instead of carrying the front
-    // view's flat fringe across the forehead. The eye sits below its tapered tip.
-    r(-5,-39,8,1,hairDark); r(-8,-38,13,2,hairDark); r(-9,-36,15,5,hairDark);
-    r(-6,-38,9,2,hair); r(-8,-36,13,5,hair);
-    r(-4,-34,10,2,hair); r(-2,-32,8,1,hair); r(1,-31,4,1,hair); r(-2,-31,3,2,hair);
-    r(-6,-37,7,1,hairLight); r(-7,-35,4,1,hairShine); r(-5,-36,4,1,hairLight);
-    lock(-9,-31,7,style===1||style===10?5:10);
-    if (style === 0) { r(-8,-22,6,2,hair); r(-7,-23,2,2,hairLight); }
-    if ([2,4,9].includes(style)) {
-      lock(-7,-24,5,13);
-      if (style !== 2) { r(-10,-20,2,6,hairLight); r(-9,-12,4,2,hair); }
-    }
-    if ([5,6].includes(style)) {
-      for (let j=0;j<5;j++) { const bx=-7+j%2; r(bx,-23+j*3,4,4,hairDark); r(bx,-23+j*3,3,2,hairLight); r(bx+1,-22+j*3,2,2,hair); }
-      r(-6,-8,4,2,cloth); r(-5,-6,2,3,hair);
-    }
-    if (style === 3) {
-      for (const [px,py] of [[-10,-35],[-7,-39],[-2,-40],[-11,-29],[-10,-24]]) { r(px,py,4,5,hairDark); r(px,py,3,3,hair); r(px,py,2,1,hairLight); }
-    }
-    if (style === 8) {
-      lock(-8,-41,6,7); lock(-13,-39,8,8); r(-11,-37,4,2,hairLight); r(-11,-32,5,2,cloth);
-    }
-    if (style === 9) { r(-7,-30,4,2,cloth); r(-7,-28,2,3,hairShine); }
-    if (style === 10) { r(-3,-32,6,2,hair); r(0,-30,3,1,hair); r(-2,-32,3,1,hairLight); }
   } else {
     // A shaped cap, asymmetric fringe, fine highlights and separate side locks.
     r(-5,-39,10,1,hairDark);r(-8,-38,16,2,hairDark);r(-9,-36,18,7,hairDark);

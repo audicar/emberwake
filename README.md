@@ -4,11 +4,11 @@ A little life beside a sleeping dragon. A small, single-player browser game abou
 
 **Play:** https://audicar.github.io/emberwake/
 
-## The first chapter
+## A quiet beginning
 
-Name your character and choose a female or male body, skin tone, hairstyle, hair colour, clothes, cloth colour and an accessory. The wardrobe has 12 skin tones, 12 hairstyles, eight outfits, six accessories and eight hair and cloth colours. Both body choices can wear every style; a four-direction preview shows the same sprite used in the village. Conversations show the speaker’s face in a portrait to the left of the dialogue. Meet Rowan and Mira, grow moonroot in the village garden, gather three starflowers, and visit the old shrine. You can stay in the village or return to the woodland afterwards. Appearance and name can be changed from the menu at any time. Existing saves keep their progress and option selections; saves created before body selection was added load with the female body, which can be changed in the wardrobe.
+Make a home in a small village beneath a sleeping mountain. Grow a garden, get to know your neighbours, and explore paths where old stories are beginning to stir. Build a bond with dragons in a gentle fantasy adventure about kindness, belonging and finding your courage.
 
-The current build is an opening chapter of about ten minutes, with extra time for exploring. The journal shows one active main quest at a time: each unlocks the next. Completed chapters are kept in a collapsible history; meeting the tailor is optional village life. After settling in, take the southern Briarwood trail (or choose **Explore Briarwood** from the menu): rescue a hatchling, learn blade attacks and dodges, command its ember breath, then break a small guardian’s binding. Bring your companion back to the cottage for a quiet homecoming. The wider story, further regions and a larger dragon team are future work.
+This free, single-player prototype currently offers roughly ten minutes of play, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
 
 ## Controls
 
@@ -19,15 +19,15 @@ The current build is an opening chapter of about ten minutes, with extra time fo
 | Inventory | I |
 | Journal | J |
 | Village map | M |
-| Blade attack in Briarwood | Z (hold to repeat) |
+| Blade attack | Z (hold to repeat) |
 | Dodge | X |
-| Dragon ember breath after bonding | C |
+| Dragon command | C |
 | Menu / close / leave a conversation | Escape |
 | Touch devices | On-screen direction pad and E button |
 
-Inventory, journal and map can also be opened from the toolbar. Press the same key again or Escape to close; I, J and M switch directly between these screens. The map shows landmarks and your current position, with the remaining starflowers marked during their quest. The inventory includes item quantities and descriptions, plus a shortcut to the wardrobe. These screens pause movement and the in-game clock.
+Inventory, journal and map can also be opened from the toolbar. Press the same key again or Escape to close; I, J and M switch directly between these screens. The map shows landmarks and your current position, with gathering locations marked during the relevant quest. The inventory includes item quantities and descriptions, plus a shortcut to the wardrobe. These screens pause movement and the in-game clock.
 
-The in-game day advances slowly and stops before midnight. There is no forced bedtime or penalty. Press E at the front door of your red-roofed cottage, north-west of the square, to enter its furnished interior. Walk to the bed and press E to sleep. Plant and water a moonroot before sleeping; it will be ready the next morning. The cottage also holds a wardrobe, a kettle and a note from Wren.
+The in-game day advances slowly and stops before midnight. There is no forced bedtime or penalty. Press E at the front door of your red-roofed cottage, north-west of the square, to enter its furnished interior. Approach the bed from either side or the foot and press E to sleep. New stories begin inside the cottage. The tall wardrobe stands in the north-west corner, books sit along the west wall, and the kitchen counter and dining table have their own clear spaces.
 
 ## Run locally
 
@@ -47,11 +47,11 @@ npm test
 
 ## Saves and privacy
 
-Progress is automatically saved in `localStorage` after interactions, every ten seconds during play, and when leaving the page. Saves are local to a browser profile and origin. Clearing site data, switching devices or using a different web address will not carry a save across. Private browsing may discard it on exit; browser restrictions may prevent storage entirely. Expeditions restart from the village after a page reload; the blade, dragon bond and freed guardian remain saved. During an unfinished expedition, bramble sprites return on a new visit. Returning home restores your health. Defeat brings you home with your items and bond intact.
+Progress is automatically saved in `localStorage` after interactions, every ten seconds during play, and when leaving the page. Saves are local to a browser profile and origin. Clearing site data, switching devices or using a different web address will not carry a save across. Private browsing may discard it on exit; browser restrictions may prevent storage entirely. Reloading inside the cottage keeps you indoors. Expeditions restart from the village after a page reload; permanent story progress and collected equipment remain saved. Encounters reset on a new visit until their story is complete. Returning home restores your health. Defeat brings you home with your items intact.
 
 The menu reports storage errors and provides save download and import without needing an account. Import validates the file before replacing progress, and asks before replacing the current story.
 
-There are no analytics, network game services, external fonts or downloaded art assets. All scenery and sprites are drawn in Canvas. Original background music is synthesised in the browser: village, woodland and guardian themes. Enable it with the Music button and adjust its volume in the menu. Music pauses when the tab is hidden; no audio is downloaded.
+There are no analytics, network game services, external fonts or downloaded art assets. All scenery and sprites are drawn in Canvas. Original background music is synthesised in the browser, with different themes for village life and exploration. Enable it with the Music button and adjust its volume in the menu. Music pauses when the tab is hidden; no audio is downloaded.
 
 ## Hosting
 
@@ -63,7 +63,7 @@ The repository is a static site published from `main` at the repository root, wi
 - `art.js`: original procedural pixel scenery and collision geometry.
 - `character.js`: layered character sprites, body silhouettes, hair, garments and accessories.
 - `cast.js`: shared villager appearances and dialogue portraits.
-- `combat.js`: real-time encounter rules, collision, combat and dragon bond progression.
+- `combat.js`: real-time encounter rules, collision, combat and companion commands.
 - `wilds.js`, `dragon.js`: woodland scenery and dragon sprites.
 - `home.js`: cottage interior, furniture interactions and collision geometry.
 - `music.js`: original musical themes and the Web Audio scheduler.
@@ -73,7 +73,7 @@ The repository is a static site published from `main` at the repository root, wi
 - `tests/core.test.js`: first-chapter progression, save validation, old-save migration and map reachability.
 - `tests/character.test.js`: render bounds, walking directions and visibly distinct appearance options.
 - `tests/inventory.test.js`: item quantities across planting, harvesting and shrine offerings.
-- `tests/combat.test.js`: attack direction, dodging, cooldowns, guardian progression and old-save compatibility.
+- `tests/combat.test.js`: attack direction, dodging, cooldowns, encounter progression and old-save compatibility.
 - `tests/music.test.js`: musical data and audio scheduling lifecycle.
 - `tests/story.test.js`: sequential main quests and reachable cottage interactions.
 

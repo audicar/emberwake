@@ -1,11 +1,11 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.1';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.1';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.1';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.1';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.1';
-import { drawWilds } from './wilds.js?v=0.4.1';
-import { BackgroundMusic } from './music.js?v=0.4.1';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.1';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.4.2';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.4.2';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.4.2';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.4.2';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.4.2';
+import { drawWilds } from './wilds.js?v=0.4.2';
+import { BackgroundMusic } from './music.js?v=0.4.2';
+import { HOME_ENTRY, HOME_START, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.4.2';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -22,7 +22,7 @@ let creatorSection = 'you', previewDirection = 'down';
 try { const saved = localStorage.getItem(SAVE_KEY); if (saved) { state = validateSave(JSON.parse(saved)); started = true; $('creator').hidden = true; } } catch { saveProblem = 'Your previous save could not be loaded. Begin a new story, or import a downloaded save from Menu afterwards.'; }
 draft = { ...state.appearance };
 let encounter = null;
-let homeActor = null;
+let homeActor = state.insideHome ? { ...HOME_ENTRY, direction: 'up', walk: 0 } : null;
 let villageCompanion = { x: state.x - 18, y: state.y + 12 };
 
 function isPaused() { return overlays.some(id => !$(id).hidden) || !!dialogue; }
@@ -37,7 +37,7 @@ function refresh() {
   $('season').textContent = `SPRING · DAY ${state.day}`;
   const minutes = Math.floor(state.minutes / 10) * 10;
   $('clock').textContent = `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
-  $('objective').textContent = homeActor ? 'Your bed is beside the eastern window.' : encounter ? encounter.objective() : objective(state);
+  $('objective').textContent = homeActor ? !state.metRowan ? 'Make yourself at home. Rowan is waiting outside.' : 'Your bed is on the east side of the cottage.' : encounter ? encounter.objective() : objective(state);
   music.setTheme(encounter ? encounter.guardianAwake && encounter.guardian.hp > 0 && !state.guardianFreed ? 'guardian' : 'woods' : 'village');
   $('place-name').textContent = homeActor ? 'Your cottage' : encounter ? 'Briarwood' : 'Hearthvale';
   $('place-description').textContent = homeActor ? 'Warm light and a quilt by the window.' : encounter ? 'A narrow path beneath old trees.' : 'Where the hills breathe in their sleep.';
@@ -56,7 +56,7 @@ function refresh() {
   }
 }
 function returnHome(defeated = false) {
-  encounter = null; homeActor = null; keys.clear();
+  encounter = null; homeActor = null; state.insideHome=false; keys.clear();
   state.x = defeated ? 160 : TRAIL.x; state.y = defeated ? 243 : 496; state.direction = 'down';
   villageCompanion = { x: state.x - 18, y: state.y + 12 };
   closeOverlays(); refresh(); save();
@@ -64,7 +64,7 @@ function returnHome(defeated = false) {
   else toast('Back in Hearthvale. Your garden has been waiting.');
 }
 function startExpedition() {
-  state.hasBlade = true; homeActor = null;
+  state.hasBlade = true; homeActor = null; state.insideHome=false;
   encounter = new WoodlandEncounter(state, { toast, say, changed: () => { refresh(); save(); }, home: returnHome });
   keys.clear(); refresh(); save(); world.focus();
 }
@@ -79,18 +79,18 @@ function offerExpedition() {
   ], startExpedition, 'Take the trail');
 }
 function enterHome() {
-  homeActor = { ...HOME_ENTRY, direction: 'up', walk: 0 }; keys.clear(); refresh(); world.focus();
+  state.insideHome=true;homeActor = { ...HOME_ENTRY, direction: 'up', walk: 0 }; keys.clear(); refresh(); save(); world.focus();
   if(activeMainQuest(state)?.[0]==='homecoming')say('A place for two',[
     'The hatchling stops on the threshold. You carry Wren’s spare blanket to a quiet corner and fold it twice, leaving a little hollow in the middle.',
     'It circles the blanket, glances up at you, and settles with its nose beneath one wing. A tiny curl of smoke rises. You put a second cup beside the kettle.',
   ],()=>{state.homecoming=true;save();refresh();},'Welcome home');
 }
 function leaveHome() {
-  homeActor = null; state.x=160; state.y=243; state.direction='down'; keys.clear(); refresh(); save(); world.focus();
+  homeActor = null; state.insideHome=false; state.x=160; state.y=243; state.direction='down'; keys.clear(); refresh(); save(); world.focus();
 }
 function interactHome() {
   const target=homeInteraction(homeActor);
-  if(!target)return toast('Your bed is by the window. The wardrobe is on the west wall.');
+  if(!target)return toast('Your bed is on the east side. The wardrobe is in the north-west corner.');
   if(target.type==='exit')return leaveHome();
   if(target.type==='wardrobe')return openCreator(true);
   if(target.type==='bed')return say('Your bed',[state.homecoming ? 'From the blanket in the corner comes a small, contented snore. You pull up the quilt. Rest until morning?' : 'The quilt still has the crooked star you stitched into it years ago. Wren mended carefully around it. Rest until morning?'],()=>{
@@ -98,6 +98,7 @@ function interactHome() {
     toast(state.plots.some((_,i)=>isGrown(state,i))?'Morning light. Your moonroot has grown.':'Morning light and a warm cottage.');
   },'Sleep until morning');
   if(target.type==='kettle')return say('The kitchen',['The kettle is warm. Wren left your old cup at the front of the shelf. Its handle still has the little chip you remember.']);
+  if(target.type==='books')return say('Wren’s books',['Gardening, weather, mending. Almost every page has a small note in the margin. Between two well-thumbed almanacs is a thin green book: “On Listening to Dragons”.']);
   if(target.type==='notes')return say('Wren’s note',['“I mended the quilt and left the crooked star. You worked so hard on that stitch. Moonroot needs water and a night’s sleep; leave the starflowers until your first harvest. There’s room here for whoever comes home with you. — Wren”']);
 }
 function openOverlay(id) {
@@ -222,7 +223,7 @@ function drawChoice(canvas) {
   const appearance = { ...draft, [canvas.dataset.key]: Number(canvas.dataset.index) };
   const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height);
   c.imageSmoothingEnabled = false;
-  drawCharacter(c, 24, canvas.dataset.key === 'hairStyle' ? 43 : 46, appearance);
+  drawCharacter(c, 24, canvas.dataset.key === 'hairStyle' ? 43 : 46, appearance, previewDirection);
 }
 function renderOptions() {
   const root = $('appearance-options'); root.replaceChildren();
@@ -276,17 +277,17 @@ function drawPortrait() {
   $('portrait-look').textContent=STYLES.outfit[draft.outfit];
 }
 $('creator-tabs').addEventListener('click',event=>{const b=event.target.closest('[data-section]');if(b)setCreatorSection(b.dataset.section);});
-document.querySelectorAll('[data-facing]').forEach(b=>b.onclick=()=>{previewDirection=b.dataset.facing;document.querySelectorAll('[data-facing]').forEach(button=>button.setAttribute('aria-pressed',String(button===b)));drawPortrait();});
+document.querySelectorAll('[data-facing]').forEach(b=>b.onclick=()=>{previewDirection=b.dataset.facing;document.querySelectorAll('[data-facing]').forEach(button=>button.setAttribute('aria-pressed',String(button===b)));$('appearance-options').querySelectorAll('canvas[data-key]').forEach(drawChoice);drawPortrait();});
 $('character-form').onsubmit = event => {
   event.preventDefault();const name=$('character-name').value.trim();
   if(!name){$('character-name').setCustomValidity('Give your character a name.');$('character-name').reportValidity();return;}
   $('character-name').setCustomValidity('');
   if(editing){state.name=name;state.appearance={...draft};closeOverlays();save();toast('A fresh look. Still very much you.');}
-  else {state=newState(draft);encounter=null;homeActor=null;villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();save();say('A letter left on the kitchen table',[
+  else {state=newState(draft);state.x=160;state.y=243;state.insideHome=true;encounter=null;homeActor={...HOME_START,direction:'left',walk:0};villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();save();say('A letter left on the kitchen table',[
     `${name}, the cottage is yours. I put your old cup back by the kettle and mended the quilt. Rowan said he’d help with the garden. He’ll pretend he hasn’t been waiting for you.`,
     'One small thing: if you hear the mountain dreaming, don’t be frightened. It has been waiting a very long time for someone who can listen.',
     'For now, just find your feet. Rowan is by the garden, a little south of the square. — With love, Aunt Wren',
-  ]);}
+  ],null,'Make yourself at home');}
   refresh();
 };
 $('character-name').oninput=()=>{$('character-name').setCustomValidity('');drawPortrait();};
@@ -316,7 +317,7 @@ function nearest() {
   const things=[
     {...CAST.rowan,type:'rowan',label:'Talk to Rowan'},
     {...CAST.mira,type:'mira',label:'Talk to Mira'},
-    {x:160,y:235,type:'home',label:'Rest at your cottage'},
+    {x:160,y:235,type:'home',label:'Enter your cottage'},
     {x:368,y:203,type:'tailor',label:'Visit the wardrobe'},
     {x:720,y:193,type:'shrine',label:'Listen at the old shrine'},
     {x:338,y:278,type:'well',label:'Look into the well'},
@@ -372,7 +373,7 @@ overlays.forEach(id=>$(id).addEventListener('click',event=>{if(event.target===$(
 $('wardrobe').onclick=()=>openCreator(true);
 $('save-button').onclick=()=>{$('menu-status').textContent=save()?'Progress saved on this device.':'Browser storage is unavailable. Download your save instead.';};
 $('export-save').onclick=()=>{const {walk,...data}=state;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`emberwake-day-${state.day}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('menu-status').textContent='Save downloaded. Keep it somewhere safe.';};
-$('import-save').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>30000)throw new Error('That file is too large to be a game save.');const incoming=validateSave(JSON.parse(await file.text()));if(!confirm('Replace the current story with this save? Download your current save first if you want to keep it.'))return;state=incoming;encounter=null;homeActor=null;villageCompanion={x:state.x-18,y:state.y+12};started=true;closeOverlays();save();refresh();toast('Your story, right where you left it.');}catch(error){$('menu-status').textContent=error instanceof SyntaxError?'This file is not valid JSON.':error.message;}finally{event.target.value='';}};
+$('import-save').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>30000)throw new Error('That file is too large to be a game save.');const incoming=validateSave(JSON.parse(await file.text()));if(!confirm('Replace the current story with this save? Download your current save first if you want to keep it.'))return;state=incoming;encounter=null;homeActor=state.insideHome?{...HOME_ENTRY,direction:'up',walk:0}:null;villageCompanion={x:state.x-18,y:state.y+12};started=true;closeOverlays();save();refresh();toast('Your story, right where you left it.');}catch(error){$('menu-status').textContent=error instanceof SyntaxError?'This file is not valid JSON.':error.message;}finally{event.target.value='';}};
 $('restart').onclick=()=>{if(!confirm('Start a new story? Your current local save will be replaced when you begin. Download it first if you want to keep it.'))return;openCreator(false);};
 
 async function toggleSound() {

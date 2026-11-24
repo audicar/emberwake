@@ -60,7 +60,7 @@ export class WoodlandEncounter {
       this.events.say('A wayward hatchling',[
         'A little dragon has caught its wing beneath a fallen branch. You lift the wood and sit back. After a long moment, it edges forward and presses its warm forehead into your hand.',
         'It follows when you stand, then stops whenever you look back. On the third try, you hold out your hand. This time it stays beside you.',
-        'The hatchling will follow you. Press C to call its ember breath in a fight. Z swings your blade; X dodges an incoming attack.',
+        'The hatchling will follow you. Press C to call its ember breath in a fight. Left-click or Z swings your blade; right-click or X dodges an incoming attack.',
       ],()=>{this.state.dragonBonded=true;this.companion={x:this.player.x-18,y:this.player.y+10,direction:'up'};this.events.changed();this.events.toast('A first bond · Your hatchling is ready to help.');});
       return true;
     }

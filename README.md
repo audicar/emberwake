@@ -20,11 +20,13 @@ This free, single-player prototype currently offers roughly ten minutes of play,
 | Inventory | I |
 | Journal | J |
 | Village map | M |
-| Blade attack | Z (hold to repeat) |
-| Dodge | X |
+| Blade attack | Left mouse button or Z (hold either to repeat) |
+| Dodge | Right mouse button or X |
 | Dragon command | C |
 | Menu / close / leave a conversation | Escape |
 | Touch devices | On-screen direction pad and E button |
+
+In combat, click the game area to attack or dodge. Both actions follow the direction you are facing; turn with the movement keys. Mouse controls work alongside WASD and the arrow keys.
 
 Inventory, journal and map can also be opened from the toolbar. Press the same key again or Escape to close; I, J and M switch directly between these screens. The map shows landmarks and your current position, with gathering locations marked during the relevant quest. The inventory includes item quantities and descriptions, plus a shortcut to the wardrobe. These screens pause movement and the in-game clock.
 

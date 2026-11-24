@@ -21,7 +21,7 @@ export const QUESTS = [
   ['flowers', 'A handful of starlight', 'Gather three starflowers around the village and meadow. M marks the ones still growing.', 'main'],
   ['awakened', 'The dream beneath the hill', 'Rowan told you Aunt Wren used to take three starflowers to the old shrine. She said the hill slept easier afterwards. Bring 1 moonroot and 3 starflowers east across the wooden bridge. Press E beside the shrine to place them in the offering bowl.', 'main'],
   ['dragonBonded', 'A cry in the trees', 'Take the southern trail into Briarwood and help the stranded hatchling.', 'main'],
-  ['guardianFreed', 'The thornbound guardian', 'Clear the bramble sprites, break the guardian’s binding, then approach it with E.', 'main'],
+  ['guardianFreed', 'The thornbound guardian', 'Clear the bramble sprites, break the guardian’s binding, then approach it with E. Left-click or Z attacks; right-click or X dodges; C calls your dragon.', 'main'],
   ['homecoming', 'A place for two', 'Bring your hatchling home to the cottage.', 'main'],
   ['metMira', 'A visit to the tailor', 'Introduce yourself to Mira outside the blue-roofed cottage.', 'optional'],
 ];

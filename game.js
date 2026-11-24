@@ -1,14 +1,14 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.3';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.3';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.3';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.3';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.3';
-import { drawWilds } from './wilds.js?v=0.6.3';
-import { BackgroundMusic } from './music.js?v=0.6.3';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.3';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.3';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.3';
-import { drawJourney } from './journey-art.js?v=0.6.3';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.4';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.4';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.4';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.4';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.4';
+import { drawWilds } from './wilds.js?v=0.6.4';
+import { BackgroundMusic } from './music.js?v=0.6.4';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.4';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.4';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.4';
+import { drawJourney } from './journey-art.js?v=0.6.4';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -143,13 +143,13 @@ function startExpedition() {
   keys.clear(); refresh(); save(); world.focus();
 }
 function offerExpedition() {
-  if(!state.awakened) return toast('The southern trail is overgrown. Follow the main story to the old shrine.');
+  if(!state.awakened)return say('Briarwood trail',['KEEP OUT. Briarwood trail closed. The brambles have swallowed the path.'],null,'Step back');
   closeOverlays();
   say('Briarwood trail', state.dragonBonded ? [
     'Your hatchling looks towards the trees. Aunt Wren’s blade is at your side. Take the woodland trail?',
   ] : [
     'A small cry carries through the trees. Beside the trail is a satchel with Aunt Wren’s old practice blade and a note: “For brambles. And whatever is tangling them.”',
-    'In Briarwood, Z swings your blade, X dodges and C calls your dragon once you have made a bond. You can head home from the trail lantern or the menu.',
+    'In Briarwood, left-click swings your blade and right-click dodges. Z and X also work. Turn with the movement keys; C calls your dragon once you have made a bond. You can head home from the trail lantern or the menu.',
   ], startExpedition, 'Take the trail');
 }
 function enterHome() {
@@ -400,7 +400,7 @@ function nearest() {
     {x:720,y:193,type:'shrine',label:'Listen at the old shrine'},
     {x:338,y:278,type:'well',label:'Look into the well'},
     {x:430,y:288,type:'sign',label:'Read the signpost'},
-    {...TRAIL,type:'trail',label:'Take the Briarwood trail'},
+    {...TRAIL,type:'trail',label:state.awakened?'Take the Briarwood trail':'Read the warning sign'},
     ...PLOTS.map((p,i)=>({...p,id:i,type:'plot',label:isGrown(state,i)?'Harvest moonroot':!state.plots[i]?'Plant a moonroot':!state.plots[i].watered?'Water the moonroot':'Check your moonroot'})),
     ...FLOWERS.filter(f=>!state.flowers.includes(f.id)).map(f=>({...f,type:'flower',label:'Gather a starflower'})),
   ];
@@ -509,6 +509,16 @@ window.addEventListener('keyup',event=>{const key=event.key.length===1?event.key
 window.addEventListener('blur',()=>{keys.clear();save();});
 document.addEventListener('visibilitychange',()=>{keys.clear();if(document.hidden)save();music.setVisible(!document.hidden);});
 window.addEventListener('pagehide',save);
+// Mouse buttons leave the movement hand free. Track a held mouse attack
+// separately so releasing it does not cancel a held keyboard attack.
+world.addEventListener('mousedown',event=>{
+  if(!started||!encounter||isPaused()||![0,2].includes(event.button))return;
+  event.preventDefault();world.focus();
+  if(event.button===0){keys.add('mouseAttack');encounter.command('z');}
+  else encounter.command('x');
+});
+window.addEventListener('mouseup',event=>{if(event.button===0)keys.delete('mouseAttack');});
+world.addEventListener('contextmenu',event=>{if(encounter)event.preventDefault();});
 document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',event=>{event.preventDefault();b.setPointerCapture(event.pointerId);keys.add(b.dataset.dir);});for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,()=>keys.delete(b.dataset.dir));});
 $('touch-interact').onclick=interact;
 document.querySelectorAll('[data-combat]').forEach(button=>{
@@ -527,7 +537,7 @@ function tick(time){
   moving=false;
   if(started&&!isPaused()&&!document.hidden){
     if(encounter) {
-      if(keys.has('attack')) encounter.command('z');
+      if(keys.has('attack')||keys.has('mouseAttack')) encounter.command('z');
       encounter.update(dt,keys);
     } else if(homeActor) {
       let dx=Number(keys.has('right'))-Number(keys.has('left')),dy=Number(keys.has('down'))-Number(keys.has('up'));
@@ -546,7 +556,7 @@ function tick(time){
     if(time-lastSave>10000){save();lastSave=time;}
     refresh();
   }
-  world.setAttribute('aria-label',homeActor?'Your cottage. Move with the arrow keys and press E beside your bed to sleep.':encounter?'Briarwood. Move with arrows, hold Z to attack, press X to dodge and C to command your dragon.':'Hearthvale. Move with arrows, E to interact, I inventory, J journal and M map.');
+  world.setAttribute('aria-label',homeActor?'Your cottage. Move with the arrow keys and press E beside your bed to sleep.':encounter?'Briarwood. Move with arrows or WASD. Left click or Z attacks; right click or X dodges; C commands your dragon.':'Hearthvale. Move with arrows, E to interact, I inventory, J journal and M map.');
   const actor=homeActor ?? encounter?.player ?? state;
   camera.x=Math.max(0,Math.min(WORLD.width-world.width,Math.round(actor.x-world.width/2)));
   camera.y=Math.max(0,Math.min(WORLD.height-world.height,Math.round(actor.y-world.height*.52)));

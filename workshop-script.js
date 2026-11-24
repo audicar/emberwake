@@ -16,7 +16,7 @@ export const WORKSHOP = {
     paragraphs: [
       'You sounded tired in your last letter. Come spend the spring in Hearthvale. I’ll be travelling, and your old room is ready.',
       'You don’t need to know what comes next before you get here.',
-      'Your cup’s by the kettle.',
+      'Your cup’s on the table.',
     ],
     signoff: 'With love,',
     signature: 'Aunt Wren',

@@ -1,14 +1,14 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.4';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.4';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.4';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.4';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.4';
-import { drawWilds } from './wilds.js?v=0.6.4';
-import { BackgroundMusic } from './music.js?v=0.6.4';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.4';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.4';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.4';
-import { drawJourney } from './journey-art.js?v=0.6.4';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.5';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.5';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.5';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.5';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.5';
+import { drawWilds } from './wilds.js?v=0.6.5';
+import { BackgroundMusic } from './music.js?v=0.6.5';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.5';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.5';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.5';
+import { drawJourney } from './journey-art.js?v=0.6.5';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -123,7 +123,7 @@ function finishWorkshop() {
   if(!workshop)return;
   workshop=null;state.workshopStep=null;state.insideHome=true;homeActor={...HOME_ENTRY,direction:'up',walk:0};
   $('game').inert=false;closeOverlays();refresh();save();
-  toast('Hearthvale. Your old cup is waiting by the kettle.');
+  toast('Hearthvale. Your old cup is waiting on the table.');
 }
 function advanceWorkshop() {
   if(!workshop||!workshop.advance())return;
@@ -171,7 +171,7 @@ function interactHome() {
     state.day++;state.minutes=420;homeActor={...HOME_BED,direction:'down',walk:0};
     toast(state.plots.some((_,i)=>isGrown(state,i))?'Morning light. Your moonroot has grown.':'Morning light and a warm cottage.');
   },'Sleep until morning','Not now');
-  if(target.type==='kettle')return say('The kitchen',['The kettle is warm. Aunt Wren left your old cup at the front of the shelf. Its handle still has the little chip you remember.']);
+  if(target.type==='kettle')return say('The kitchen',['Aunt Wren left your old cup on the table beside her note. Its handle still has the little chip you remember.']);
   if(target.type==='books')return say('Aunt Wren’s books',['Gardening, weather, mending. Almost every page has a small note in the margin. Between two well-thumbed almanacs is a thin green book: “On Listening to Dragons”.']);
   if(target.type==='notes')return say('Aunt Wren’s note',['“I mended the quilt and left the crooked star. You worked so hard on that stitch. Moonroot needs water and a night’s sleep; leave the starflowers until your first harvest. There’s room here for whoever comes home with you. — Aunt Wren”']);
 }

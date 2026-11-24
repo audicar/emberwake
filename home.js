@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.6.2';
-import { drawDragon } from './dragon.js?v=0.6.2';
+import { drawCharacter } from './character.js?v=0.6.3';
+import { drawDragon } from './dragon.js?v=0.6.3';
 
 export const HOME_ENTRY = { x: 416, y: 463 };
 export const HOME_START = { x: 445, y: 379 };

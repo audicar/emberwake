@@ -1,14 +1,14 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.2';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.2';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.2';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.2';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.2';
-import { drawWilds } from './wilds.js?v=0.6.2';
-import { BackgroundMusic } from './music.js?v=0.6.2';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.2';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.2';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.2';
-import { drawJourney } from './journey-art.js?v=0.6.2';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.3';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.3';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.3';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.3';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.3';
+import { drawWilds } from './wilds.js?v=0.6.3';
+import { BackgroundMusic } from './music.js?v=0.6.3';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.3';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.3';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.3';
+import { drawJourney } from './journey-art.js?v=0.6.3';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -427,9 +427,9 @@ function interact() {
   if(t.type==='plot')toast(tend(state,t.id));
   if(t.type==='home')return enterHome();
   if(t.type==='shrine'){
-    if(state.awakened)say('dragon',[`${state.name}. A name to remember. I shall dream of rain for your garden. You may stay as long as you like.`]);
-    else if(awaken(state))say('dragon',[
-      'You set the moonroot and three starflowers in the bowl. The stone warms beneath your hand. Far above, something opens one golden eye.',
+    if(state.awakened)say('unknown',[`${state.name}. A name to remember. I shall dream of rain for your garden. You may stay as long as you like.`]);
+    else if(awaken(state))say('unknown',[
+      'You set the moonroot and three starflowers in the bowl. The stone warms beneath your hand. A low note trembles through the air. Then, a voice.',
       `At last. ${state.name}. I knew you by the way you tended something small.`,
       state.dragonBonded ? 'Emberkeeper. Dragon tamer. Your little friend knows what those words mean already. Keep this place alive, together.' : 'They will call you the Emberkeeper. There is a little dragon lost in Briarwood. Find it. You have much to learn from each other.',
       'The briars across the southern trail loosen. Briarwood is open to you now. Follow the little cry beneath its trees.',

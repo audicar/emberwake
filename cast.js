@@ -1,4 +1,4 @@
-import { drawCharacter } from './character.js?v=0.6.2';
+import { drawCharacter } from './character.js?v=0.6.3';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {
@@ -12,6 +12,7 @@ export const CAST = {
   },
   guardian: { name: 'Briarwood’s guardian', label: 'Briarwood’s guardian' },
   dragon: { name: 'the dreamer', label: 'The dream beneath the hill' },
+  unknown: { name: 'an unknown speaker', label: 'An unfamiliar voice', portrait: 'mystery' },
 };
 
 export function drawSpeakerPortrait(canvas, id) {
@@ -32,8 +33,21 @@ export function drawSpeakerPortrait(canvas, id) {
   if (person.appearance) {
     // Crop at the shoulders; keep the full face, hair and headwear in frame.
     drawCharacter(c, 42, 134, person.appearance, 'down', 0, 3);
+  } else if (person.portrait === 'mystery') {
+    // A shared placeholder for voices whose identity and location are unknown.
+    // Abstract mist avoids suggesting a person, creature or physical source.
+    r(4,4,76,80,'#203137');r(8,8,68,72,'#293d42');
+    for(const [x,y,w] of [[16,19,31],[29,24,36],[11,34,25],[43,38,27],[18,52,20],[36,58,32],[15,67,38]]) {
+      r(x,y,w,3,'#365057');r(x+4,y+3,w-8,2,'#30474d');
+    }
+    r(28,23,28,40,'#2b4045');r(24,30,36,26,'#2b4045');
+    const mark=['011110','110011','000011','000110','001100','001100','000000','001100'];
+    mark.forEach((row,y)=>[...row].forEach((pixel,x)=>{
+      if(pixel==='1'){r(33+x*3,29+y*4,3,4,'#bdbea5');r(33+x*3,29+y*4,2,3,'#e1ddbf');}
+    }));
+    for(const [x,y] of [[19,27],[63,51],[26,63],[57,18]])r(x,y,1,2,'#8da5a0');
   } else {
-    // The dreamer speaks through the shrine, with mossy scales and golden eyes.
+    // Revealed draconic speakers have mossy scales and golden eyes.
     r(16, 16, 6, 24, '#d2c4a1'); r(18, 12, 4, 7, '#eee0b7');
     r(62, 16, 6, 24, '#d2c4a1'); r(62, 12, 4, 7, '#eee0b7');
     r(16, 34, 52, 30, '#293f38'); r(22, 24, 40, 45, '#293f38');

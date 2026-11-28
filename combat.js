@@ -1,3 +1,4 @@
+import { movementInput } from './controls.js?v=0.8.1';
 export const WOODS = { width: 832, height: 576 };
 export const TRAIL = { x: 288, y: 512 };
 export const HATCHLING = { x: 350, y: 455 };
@@ -31,7 +32,7 @@ export class WoodlandEncounter {
     this.active=true; this.time=0;
     this.player={x:288,y:500,direction:'up',walk:0,hp:6,maxHp:6,invulnerable:0,dash:0,dashCooldown:0,attackCooldown:0,dragonCooldown:0};
     this.companion={x:270,y:518,direction:'up'};
-    this.enemies=state.guardianFreed?[]:[
+    this.enemies=state.guardianFreed||state.clearingQuiet?[]:[
       {id:'bramble-1',x:320,y:342,homeX:320,homeY:342,hp:2,maxHp:2},
       {id:'bramble-2',x:480,y:304,homeX:480,homeY:304,hp:2,maxHp:2},
       {id:'bramble-3',x:248,y:226,homeX:248,homeY:226,hp:2,maxHp:2},
@@ -67,7 +68,7 @@ export class WoodlandEncounter {
     }
     if(hint==='Free the guardian') {
       this.events.say('guardian',[
-        'The dark band around the dragon’s neck crumbles. It lowers its head. Your hatchling steps forward, very bravely, and touches its nose.',
+        'The last thorns fall at the dragon’s feet. It lowers its head. Your hatchling steps forward, very bravely, and touches its nose.',
         'Someone taught these thorns to bind us, says a voice in your thoughts. The hatchling checks that you are still beside it. It has chosen well, the guardian says. Take it home, little ember.',
         'The guardian bows its head to you. A second warmth settles beside the first. Two Dragon Blessings, both still bright.',
       ],()=>{this.state.guardianFreed=true;this.events.changed();this.events.toast('Dragon Blessings · 2. The guardian is free.');});return true;
@@ -79,13 +80,20 @@ export class WoodlandEncounter {
   leave(defeated=false) { if(!this.active)return;this.active=false;this.events.home(defeated); }
   damageEnemy(enemy,amount) {
     if(enemy.hp<=0)return;
+    const oldHp=enemy.hp;
     enemy.hp=Math.max(0,enemy.hp-amount);enemy.flash=.18;
     this.effects.push({x:enemy.x,y:enemy.y-12,life:.3,kind:'hit'});
+    if(enemy.boss&&Math.ceil(oldHp/2)>Math.ceil(enemy.hp/2))
+      this.effects.push({x:enemy.x,y:enemy.y-29+5*(Math.ceil(oldHp/2)-1),life:.55,kind:'snap'});
     if(enemy.hp===0) {
       enemy.phase='idle';
       this.effects.push({x:enemy.x,y:enemy.y-8,life:.7,kind:'leaves'});
       if(enemy.boss)this.events.toast('The binding is broken. Walk closer and press E.');
-      else if(this.enemies.every(e=>e.hp<=0))this.events.toast('The clearing falls quiet. A larger dragon stirs to the north-east.');
+      else if(this.enemies.every(e=>e.hp<=0)){
+        this.state.clearingQuiet=true;
+        this.events.changed();
+        this.events.toast('The clearing falls quiet. A larger dragon stirs to the north-east.');
+      }
     }
   }
   command(key) {
@@ -120,15 +128,15 @@ export class WoodlandEncounter {
     if(p.hp<=0)this.leave(true);
     return true;
   }
-  update(dt,keys=new Set()) {
+  update(dt,keys=new Set(),stick) {
     if(!this.active)return;
     dt=Math.min(dt,.05);this.time+=dt;const p=this.player;
     for(const field of ['invulnerable','dashCooldown','attackCooldown','dragonCooldown'])p[field]=Math.max(0,p[field]-dt);
     if(this.swing){this.swing.life-=dt;if(this.swing.life<=0)this.swing=null;}
     this.effects=this.effects.filter(e=>(e.life-=dt)>0);
-    let dx=Number(keys.has('right'))-Number(keys.has('left')),dy=Number(keys.has('down'))-Number(keys.has('up'));
+    let {x:dx,y:dy}=movementInput(keys,stick);
     if(p.dash>0){p.dash=Math.max(0,p.dash-dt);[dx,dy]=vectors[p.dashDirection];move(p,dx*220*dt,dy*220*dt);}
-    else if(dx||dy){p.direction=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';const n=Math.hypot(dx,dy);move(p,dx/n*76*dt,dy/n*76*dt);}
+    else if(dx||dy){p.direction=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';move(p,dx*76*dt,dy*76*dt);}
     p.walk=dx||dy?(p.walk||0)+dt*11:0;
     const companionDistance=distance(p,this.companion);
     if(companionDistance>23){const n=companionDistance;move(this.companion,(p.x-this.companion.x)/n*100*dt,(p.y-this.companion.y)/n*100*dt);this.companion.direction=p.direction;}

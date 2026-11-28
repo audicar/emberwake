@@ -1,3 +1,4 @@
+import { movementInput } from './controls.js?v=0.8.1';
 // The second chapter is serialisable; drawing and browser controls live elsewhere.
 export const LOWER_TRAIL={x:490,y:486};
 export const CHAPTER_QUESTS=[
@@ -37,7 +38,7 @@ export function chapterQuest(state,key){
   const descriptions={
     morningWater:s===0?'Your hatchling has a home. Go inside your cottage, press E beside the bed and sleep. Tomorrow can begin slowly.':s===1?'The hatchling is investigating its blanket in the south-east corner of your cottage. Approach it and press E.':s===2?'Rowan is passing your cottage on his way to the river. Step outside and press E to join him. M shows his position.':'Meet Rowan on the west bank, south of the bridge. Press E to talk or sit together. Your hatchling seems interested in the water.',
     riverRescue:s===4?'The hatchling heard a dragon downstream. Take the lower path from the sign on the west bank, south of Rowan’s fishing spot (M). Rowan knows the route. Inspect fresh tracks and iron pins with E, then reach the old mill.':s===5?'A dragon is bound beneath the mill wheel. Bring Rowan to the brake in the western courtyard and press E. He can secure the wheel before you approach.':'Rowan is holding the mill brake. Clear the bramble creatures, cut the west and east anchors, then use C on the ember knot to the south. Left-click/Z attacks; right-click/X dodges. Approach the freed dragon with E. The wardstone and equipment contain clues.',
-    pathBack:s===7?'Your third Dragon Blessing awakened Riverstep. Return west from the mill to Lower Briarwood and speak to the guardian in the central clearing with E.':s===8?'The guardian named you an Emberkeeper: you were born able to carry the blessings. Follow the downstream route from the Lower Briarwood entrance. Face left at the marked stones and right-click or press X to Riverstep across the narrow channel.':s===9?'You crossed the channel. Your hatchling is looking towards the river dragon. Press E nearby and let it choose where to go.':'Rowan is walking home with you. Leave the downstream crossing by the western lantern, then enter your cottage. The north-road survey marks and fresh cart tracks are recorded below.',
+    pathBack:s===7?'Your third Dragon Blessing awakened Riverstep. Return west from the mill to Lower Briarwood and speak to the guardian in the central clearing with E.':s===8?'The guardian named you an Emberkeeper: you were born able to carry the blessings. Follow the downstream route from the Lower Briarwood entrance. Face left at the marked stones and right-click or press X to Riverstep across the narrow channel.':s===9?'You crossed the channel. Your hatchling is looking towards the river dragon. Press E nearby and let it choose where to go.':state.chapter.region==='return'?'Rowan is walking home with you. Take the path by the western lantern.':'Walk up the western lane with Rowan. Press E at your cottage door.',
   };
   const base=CHAPTER_QUESTS.find(q=>q[0]===key);return base?[key,base[1],descriptions[key],base[3]]:null;
 }
@@ -93,7 +94,7 @@ export class MillChapter {
   objective(){
     const c=this.state.chapter;
     if(this.region==='return')return c.stage>=10?'Follow Rowan to the western lantern, then home.':c.stage===9?'Your hatchling is looking towards the river dragon. Press E.':'Face left at the marked stones. Right-click or X: Riverstep across.';
-    if(this.region==='trail')return c.stage>=7?'Speak to the guardian in the central clearing, then take the downstream route.':'Follow the lower path to the old mill. E examines tracks and other discoveries.';
+    if(this.region==='trail')return c.stage>=8?'Take the downstream path by the south-west lantern.':c.stage===7?'Speak to the guardian in the central clearing.':'Follow the lower path to the old mill. E examines tracks and other discoveries.';
     if(c.stage>=7)return 'A dragon is free. Explore the wardstone, then return west to the guardian.';
     if(!c.brake)return 'Reach the brake in the western courtyard with Rowan. Press E.';
     const remaining=c.anchors.filter(n=>n>0).length;
@@ -167,15 +168,15 @@ export class MillChapter {
   hurt(){const p=this.player;if(p.invulnerable>0||!this.active)return;p.hp--;p.invulnerable=1.15;if(p.hp<=0)this.leave(true);}
   animate(dt){if(this.flight)this.flight.time+=dt;if(this.glide)this.glide.time+=dt;}
   leave(defeated=false){if(!this.active)return;this.changed();this.active=false;this.state.chapter.region=null;this.events.home(defeated);}
-  update(dt,keys=new Set()){
+  update(dt,keys=new Set(),stick){
     if(!this.active)return;dt=Math.max(0,Math.min(dt,.05));this.time+=dt;const p=this.player,c=this.state.chapter;
     this.bindingHintCooldown=Math.max(0,this.bindingHintCooldown-dt);
     for(const k of ['invulnerable','dashCooldown','attackCooldown','dragonCooldown'])p[k]=Math.max(0,p[k]-dt);
     if(this.swing){this.swing.life-=dt;if(this.swing.life<=0)this.swing=null;}
     this.effects=this.effects.filter(e=>(e.life-=dt)>0);
-    let dx=Number(keys.has('right'))-Number(keys.has('left')),dy=Number(keys.has('down'))-Number(keys.has('up'));
+    let {x:dx,y:dy}=movementInput(keys,stick);
     if(p.dash>0){const dashDt=Math.min(dt,p.dash);p.dash=Math.max(0,p.dash-dashDt);[dx,dy]=vectors[p.dashDirection];const speed=hasRiverstep(this.state)?300:220;this.move(p,dx*speed*dashDt,dy*speed*dashDt,hasRiverstep(this.state));if(hasRiverstep(this.state))this.effects.push({x:p.x,y:p.y,life:.25,kind:'ripple'});if(p.dash===0&&chapterBlocked(this.region,p.x,p.y))Object.assign(p,this.safe);}
-    else if(dx||dy){p.direction=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';const n=Math.hypot(dx,dy);this.move(p,dx/n*76*dt,dy/n*76*dt);}
+    else if(dx||dy){p.direction=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';this.move(p,dx*76*dt,dy*76*dt);}
     if(!chapterBlocked(this.region,p.x,p.y))this.safe={x:p.x,y:p.y};p.walk=dx||dy?(p.walk||0)+dt*11:0;
     if(this.hatchlingPresent){const d=distance(p,this.companion);if(d>24){this.move(this.companion,(p.x-this.companion.x)/d*95*dt,(p.y-this.companion.y)/d*95*dt,hasRiverstep(this.state));this.companion.direction=p.direction;}if(d>150)Object.assign(this.companion,{x:p.x-16,y:p.y+12});}
     if(c.brake&&this.region==='mill')Object.assign(this.rowan,{x:432,y:390,direction:'up',walk:0});

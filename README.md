@@ -24,7 +24,9 @@ This free, single-player prototype includes an opening chapter and a further woo
 | Dodge / Riverstep once awakened | Right mouse button or X |
 | Dragon command | C |
 | Menu / close / leave a conversation | Escape |
-| Touch devices | On-screen direction pad and E button |
+| Touch devices | Hold and drag in the lower-left area to move; Use, Blade, Dodge and Dragon buttons on the right |
+
+On mobile, the floating thumbstick follows where your left thumb lands. Drag in any direction, use a small drag to walk slowly, and release to stop. The right thumb can hold Blade to repeat attacks, tap Dodge, or call Dragon while moving. The mobile combat display shows health and the current objective; the journal keeps the detailed instructions.
 
 In combat, click the game area to attack or dodge. Both actions follow the direction you are facing; turn with the movement keys. Mouse controls work alongside WASD and the arrow keys.
 
@@ -50,7 +52,7 @@ npm test
 
 ## Saves and privacy
 
-Progress is automatically saved in `localStorage` after interactions, every ten seconds during play, and when leaving the page. Saves are local to a browser profile and origin. Clearing site data, switching devices or using a different web address will not carry a save across. Private browsing may discard it on exit; browser restrictions may prevent storage entirely. Reloading inside the cottage keeps you indoors. The first woodland expedition restarts from the village after a page reload; permanent story progress and collected equipment remain saved. That encounter resets on a new visit until its story is complete. The lower-valley chapter preserves clues, cleared creatures, broken bindings and your route across reloads; retreating or being helped home keeps that progress. Returning home restores your health. Defeat brings you home with your items intact.
+Progress is automatically saved in `localStorage` after interactions, every ten seconds during play, and when leaving the page. Saves are local to a browser profile and origin. Clearing site data, switching devices or using a different web address will not carry a save across. Private browsing may discard it on exit; browser restrictions may prevent storage entirely. Reloading inside the cottage keeps you indoors. The first woodland expedition restarts from the village after a page reload; permanent story progress and collected equipment remain saved. Once you clear the woodland path, it stays clear on later visits. The lower-valley chapter preserves clues, cleared creatures, broken bindings and your route across reloads; retreating or being helped home keeps that progress. Returning home restores your health. In the first expedition, you can retry at the trail lantern with full health or rest at the cottage. You keep your items either way.
 
 The menu reports storage errors and provides save download and import without needing an account. Import validates the file before replacing progress, and asks before replacing the current story.
 

@@ -1,7 +1,7 @@
-import { drawCharacter, drawTree } from './art.js?v=0.8.0';
-import { drawDragon } from './dragon.js?v=0.8.0';
-import { CAST } from './cast.js?v=0.8.0';
-import { CHAPTER_TREES, ANCHORS } from './chapter.js?v=0.8.0';
+import { drawCharacter, drawTree } from './art.js?v=0.8.1';
+import { drawDragon } from './dragon.js?v=0.8.1';
+import { CAST } from './cast.js?v=0.8.1';
+import { CHAPTER_TREES, ANCHORS } from './chapter.js?v=0.8.1';
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
 const ground=new Map();
 function path(c,x,y,w,h){r(c,x-2,y-2,w+4,h+4,'#9eaf84');r(c,x,y,w,h,'#c4bd97');for(let yy=y+4;yy<y+h;yy+=9)for(let xx=x+5;xx<x+w;xx+=14)if((xx+yy)%3)r(c,xx,yy,3,1,'#aea37d');}

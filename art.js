@@ -1,9 +1,9 @@
-import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.8.0';
-import { drawCharacter } from './character.js?v=0.8.0';
-export { drawCharacter } from './character.js?v=0.8.0';
-import { CAST } from './cast.js?v=0.8.0';
-import { drawDragon } from './dragon.js?v=0.8.0';
-import { rowanPosition } from './settling.js?v=0.8.0';
+import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.8.1';
+import { drawCharacter } from './character.js?v=0.8.1';
+export { drawCharacter } from './character.js?v=0.8.1';
+import { CAST } from './cast.js?v=0.8.1';
+import { drawDragon } from './dragon.js?v=0.8.1';
+import { rowanPosition } from './settling.js?v=0.8.1';
 export { tree as drawTree };
 export const WORLD = { width: 832, height: 576 };
 export const VILLAGE_BRIDGE = { x: 540, y: 292, w: 91, h: 51 };
@@ -68,6 +68,50 @@ function house(c,b) {
   for (const wx of [x+14,x+w-29]) { rect(c,wx-2,y+43,19,21,'#8e8060');rect(c,wx,y+45,15,15,'#6d9291');rect(c,wx+2,y+47,5,5,'#d9dfb1');rect(c,wx+6,y+45,2,15,'#c8b990');rect(c,wx,y+51,15,2,'#c8b990');rect(c,wx-3,y+62,22,4,'#8c6549'); for(let i=0;i<4;i++){rect(c,wx+i*4,y+60,3,3,'#7e9859');rect(c,wx+i*4,y+58,2,2,i%2?'#e7b57b':'#b8a2a3');} }
 }
 function flowers(c,x,y,colour) { rect(c,x,y-4,1,5,'#526f41');rect(c,x-2,y-6,5,3,colour);rect(c,x-1,y-7,3,5,colour);rect(c,x,y-5,1,1,'#f6dda0'); }
+function drawKitchenGarden(c,state) {
+  // Clods feather the turned earth into the lawn. The front lip stays visible at the gardener's feet.
+  for(let x=238;x<323;x+=4){
+    const edge=Math.min(x-238,322-x);
+    const taper=Math.max(0,7-edge);
+    const top=330+taper+hash(x,1)%3, bottom=362-taper-hash(x,2)%3;
+    rect(c,x,top,4,bottom-top,'#97845e');
+    rect(c,x,top+1,4,2,'#b49c72');
+    rect(c,x,bottom-2,4,2,'#847a54');
+  }
+  for(const [i,{x,y}] of PLOTS.entries()){
+    const plant=state.plots[i], damp=plant?.watered;
+    const earth=damp?'#695848':'#9c7451', ridge=damp?'#897359':'#c49b72';
+    rect(c,x-10,y-9,20,23,earth);
+    rect(c,x-8,y-11,16,26,earth);
+    for(let row=0;row<3;row++){
+      const offset=(i+row)%3;
+      rect(c,x-8+offset,y-7+row*8,12-offset,2,ridge);
+      rect(c,x+4,y-6+row*8,4,1,ridge);
+    }
+    if(!plant)continue;
+    // A second pair of cotyledons on the near side makes a tended row visible under the player.
+    for(const [dx,dy] of [[-3,-2],[4,11]]){
+      const sx=x+dx,sy=y+dy;
+      if(isGrown(state,i)){
+        rect(c,sx-3,sy-3,7,6,'#e8d9ac');rect(c,sx-2,sy+3,4,2,'#bdab83');
+        rect(c,sx-2,sy-8,3,6,'#52794e');rect(c,sx-6,sy-10,5,4,'#8caf66');
+        rect(c,sx+1,sy-12,5,5,'#6d9256');rect(c,sx+2,sy-12,3,1,'#c8d48e');
+      }else{
+        rect(c,sx,sy-2,2,4,'#496b43');rect(c,sx-4,sy-5,4,3,'#7ca455');
+        rect(c,sx-4,sy-5,3,1,'#c2ce83');rect(c,sx+2,sy-6,4,4,'#a8bd67');
+      }
+    }
+    if(damp){rect(c,x-8,y+11,4,1,'#acada0');rect(c,x-6,y+12,2,1,'#87928a');}
+  }
+  // Leave the front gate open where the lane meets the beds.
+  for(const start of [216,300]){
+    rect(c,start,372,44,3,'#aa9068');
+    for(let x=start;x<start+45;x+=14){
+      rect(c,x,368,4,12,'#ac956f');rect(c,x+1,366,2,2,'#d9bd88');rect(c,x,368,2,8,'#cfb387');
+    }
+  }
+  for(const [x,y] of [[231,339],[236,358],[326,348],[330,362],[222,369]])flowers(c,x,y,'#dfc58e');
+}
 export function drawWorld(c, s, time, camera, companion = null, rowan = null, {showRowan = true} = {}) {
   c.save();c.translate(-camera.x,-camera.y);
   rect(c,0,0,832,576,'#95a97b');
@@ -77,7 +121,17 @@ export function drawWorld(c, s, time, camera, companion = null, rowan = null, {s
   rect(c,0,87,832,19,'#456b4e');rect(c,0,106,832,12,'#5e8150');
   // Deterministic ground detail, without an image download or a large tileset.
   for(let y=120;y<576;y+=8)for(let x=0;x<832;x+=8){const n=hash(x,y); if(n%7===0)rect(c,x+n%5,y,3,1,'#b2bf8c');else if(n%11===0){rect(c,x,y,1,3,'#819c70');rect(c,x+2,y+1,1,2,'#819c70');}else if(n%97===0)flowers(c,x,y,'#c5b985');}
-  const path=(x,y,w,h)=>{rect(c,x-2,y-2,w+4,h+4,'#a7b489');rect(c,x,y,w,h,'#d5c69e');for(let py=y+3;py<y+h;py+=7)for(let px=x+3;px<x+w;px+=8)if(hash(px,py)%3===0)rect(c,px,py,3,1,'#c0ae87');};
+  const path=(x,y,w,h)=>{
+    rect(c,x+3,y-2,w-6,h+4,'#adba8e');rect(c,x-2,y+3,w+4,h-6,'#adba8e');
+    rect(c,x+3,y,w-6,h,'#d5c69e');rect(c,x,y+3,w,h-6,'#d5c69e');
+    for(let py=y+3;py<y+h;py+=7)for(let px=x+3;px<x+w;px+=8)
+      if(hash(px,py)%3===0)rect(c,px,py,3,1,'#c0ae87');
+    for(let pos=5;pos<(w>h?w:h)-4;pos+=9){
+      const side=hash(x+pos,y)%2;
+      const px=w>h?x+pos:x+side*(w-2),py=w>h?y+side*(h-1):y+pos;
+      rect(c,px,py,w>h?4:2,w>h?2:4,'#bcc198');
+    }
+  };
   path(146,227,46,44);path(161,256,389,29);path(268,182,33,254);path(280,232,100,30);path(358,196,28,47);path(285,296,327,28);path(628,296,94,28);path(700,192,29,130);
   // Small flower drifts along path edges make the village feel tended.
   for(const [bx,by] of [[207,251],[307,286],[480,287],[653,332],[92,244],[188,453]]){
@@ -88,10 +142,7 @@ export function drawWorld(c, s, time, camera, companion = null, rowan = null, {s
   rect(c,312,490,3,22,'#806e50');rect(c,302,482,25,12,'#c9b487');rect(c,307,486,15,2,'#7c7654');
   if(!s.awakened){for(let i=0;i<4;i++){rect(c,277+i*7,501-i%2*3,4,17,'#54734c');rect(c,274+i*7,505-i%2*3,9,4,'#839d68');}}
   ellipse(c,452,215,15,9,'#b0b98a');
-  // Garden fence and the beds.
-  rect(c,220,322,116,55,'#8a9860');
-  for(let x=216;x<=340;x+=12){rect(c,x,367,3,14,'#b9ab7d');rect(c,x,369,3,2,'#e1c99c');}rect(c,216,372,127,3,'#b5a376');
-  for(let i=0;i<3;i++){const p=PLOTS[i];rect(c,p.x-9,p.y-5,19,18,'#6c5037');rect(c,p.x-8,p.y-3,17,2,'#8c6948');rect(c,p.x-8,p.y+4,17,2,'#8c6948');if(s.plots[i]){if(s.plots[i].watered)rect(c,p.x-8,p.y+9,17,3,'#534b35');if(isGrown(s,i)){rect(c,p.x-2,p.y-9,5,13,'#d5d4af');rect(c,p.x-5,p.y-10,5,4,'#65935c');rect(c,p.x+1,p.y-13,5,4,'#9dbb73');rect(c,p.x-2,p.y-7,5,3,'#ecdebe');}else{rect(c,p.x,p.y-2,2,7,'#527d4a');rect(c,p.x-3,p.y-3,4,3,'#b0bf77');rect(c,p.x+1,p.y-5,4,3,'#95b56a');}}}
+  drawKitchenGarden(c,s);
   // River banks, gently moving reflections and a wooden bridge.
   for(let y=100;y<576;y+=4){const rx=riverX(y);rect(c,rx-32,y,64,4,'#87a47c');rect(c,rx-26,y,52,4,'#5a8e92');rect(c,rx-21,y,42,4,'#83b1ad');rect(c,rx-23,y,3,4,'#b8bc89');if(hash(y,1)%3===0){const offset=Math.floor(time/700+y/8)%25;rect(c,rx-16+offset,y,11,1,'#c0d9c6');}}
   const bridge=VILLAGE_BRIDGE;

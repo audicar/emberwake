@@ -1,6 +1,6 @@
 // The small, serialisable part of the game. Rendering and browser APIs live elsewhere.
-import { isWorkshopStep } from './workshop-script.js?v=0.8.0';
-import { newChapter, validateChapter, CHAPTER_QUESTS, chapterComplete, chapterQuest } from './chapter.js?v=0.8.0';
+import { isWorkshopStep } from './workshop-script.js?v=0.8.1';
+import { newChapter, validateChapter, CHAPTER_QUESTS, chapterComplete, chapterQuest } from './chapter.js?v=0.8.1';
 export const SAVE_KEY = 'emberwake.save.v1';
 export const PALETTES = {
   // Append shades so existing saves and villagers keep their original colours.
@@ -41,7 +41,7 @@ export function completedMainQuests(state) {
   return completed;
 }
 export function newState(appearance = {}) {
-  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, insideHome: false, workshopStep: null, metRowan: false, rowanRiver:false, receivedSeeds:false, payPacketRead:false, workNotebookRead:false, clockUnwound:false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, guardianFreed: false, homecoming: false, chapter:newChapter() };
+  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, insideHome: false, workshopStep: null, metRowan: false, rowanRiver:false, receivedSeeds:false, payPacketRead:false, workNotebookRead:false, clockUnwound:false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, clearingQuiet: false, guardianFreed: false, homecoming: false, chapter:newChapter() };
 }
 export function validateSave(value) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 20) throw new Error('This is not an Emberwake save.');
@@ -64,7 +64,7 @@ export function validateSave(value) {
     if (!Number.isInteger(n) || n < 0 || n >= options.length) throw new Error('The saved appearance is invalid.');
     s.appearance[key] = n;
   }
-  for (const key of ['hasBlade', 'dragonBonded', 'guardianFreed', 'homecoming', 'insideHome']) {
+  for (const key of ['hasBlade', 'dragonBonded', 'clearingQuiet', 'guardianFreed', 'homecoming', 'insideHome']) {
     if (value[key] !== undefined && typeof value[key] !== 'boolean') throw new Error('The saved adventure progress is invalid.');
     s[key] = value[key] === true;
   }

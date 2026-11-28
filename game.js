@@ -1,17 +1,18 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.8.0';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.8.0';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.8.0';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.8.0';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.8.0';
-import { drawWilds } from './wilds.js?v=0.8.0';
-import { BackgroundMusic } from './music.js?v=0.8.0';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.8.0';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.8.0';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.8.0';
-import { drawJourney } from './journey-art.js?v=0.8.0';
-import { COTTAGE_MEMORIES, rememberCottageObject, createRowanActor, updateRowan, finishRowanIntroduction, finishRiverVisit, receiveGardenSeeds } from './settling.js?v=0.8.0';
-import { MillChapter, LOWER_TRAIL, blessingCount, hasRiverstep, beginMorning, CLUES, TOPICS } from './chapter.js?v=0.8.0';
-import { drawMillChapter } from './chapter-art.js?v=0.8.0';
+import { Thumbstick, movementInput } from './controls.js?v=0.8.1';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.8.1';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.8.1';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.8.1';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.8.1';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.8.1';
+import { drawWilds } from './wilds.js?v=0.8.1';
+import { BackgroundMusic } from './music.js?v=0.8.1';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.8.1';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.8.1';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.8.1';
+import { drawJourney } from './journey-art.js?v=0.8.1';
+import { COTTAGE_MEMORIES, rememberCottageObject, createRowanActor, updateRowan, finishRowanIntroduction, finishRiverVisit, receiveGardenSeeds } from './settling.js?v=0.8.1';
+import { MillChapter, LOWER_TRAIL, blessingCount, hasRiverstep, beginMorning, CLUES, TOPICS } from './chapter.js?v=0.8.1';
+import { drawMillChapter } from './chapter-art.js?v=0.8.1';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -24,6 +25,8 @@ const music = new BackgroundMusic();
 let musicRestore=false,musicBusy=false;
 try { const savedVolume=localStorage.getItem('emberwake.music.volume'); if(savedVolume!==null)music.setVolume(Number(savedVolume)); } catch {}
 try { musicRestore=localStorage.getItem('emberwake.music.enabled')==='true'; } catch {}
+const thumbstick=new Thumbstick();
+const actionPointers=new Map();
 const keys = new Set(), camera = { x: 0, y: 0 };
 let saveProblem = '';
 let creatorSection = 'you', previewDirection = 'down';
@@ -41,19 +44,24 @@ const freeDash={time:0,cooldown:0,direction:'down',safe:null};
 if(mill){homeActor=null;state.insideHome=false;}
 
 function isPaused() { return overlays.some(id => !$(id).hidden) || !!dialogue; }
-function toast(message) { clearTimeout(toastTimer); $('toast').textContent = message; $('toast').hidden = false; toastTimer = setTimeout(() => $('toast').hidden = true, 4400); }
+function toast(message) { clearTimeout(toastTimer); $('toast').textContent = touchCopy(message); $('toast').hidden = false; toastTimer = setTimeout(() => $('toast').hidden = true, 4400); }
 function save() {
   if (!started) return false;
   const { walk, ...serialised } = state;
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialised)); $('save-status').textContent = 'Saved on this device'; return true; }
   catch { $('save-status').textContent = 'Saving unavailable · download a save from Menu'; return false; }
 }
+function touchCopy(text){
+  if(!$('game').classList.contains('touch-mode'))return text;
+  return text.replace(/left-click(?:\/Z| or Z)?/gi,'Blade').replace(/right-click(?:\/X| or press X| or X)?/gi,'Dodge').replace(/press E\b/gi,'tap Use').replace(/press C\b/gi,'tap Dragon').replace(/\bE\b/g,'Use').replace(/\bC\b/g,'Dragon').replace(/\bX\b/g,'Dodge').replace(/\bM\b/g,'Map');
+}
 function refresh() {
   const adventure=mill||encounter;
   $('season').textContent = `SPRING · DAY ${state.day}`;
   const minutes = Math.floor(state.minutes / 10) * 10;
   $('clock').textContent = `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
-  $('objective').textContent = homeActor ? homeMoment?.kind==='reunion'?'Your little friend is home. Stay a little while.':state.chapter.stage===11?'The kettle, your blanket, and a little company. Take your time.':state.chapter.stage===1?'Approach your hatchling’s blanket and press E.':state.homecoming&&state.chapter.stage===0?'Sleep in your bed. Tomorrow can begin slowly.':!state.metRowan?'Take a moment with your things, if you like. E looks closer. Step outside whenever you’re ready.':'Your bed is on the east side of the cottage.' : adventure?adventure.objective():objective(state);
+  $('objective').textContent = homeActor ? homeMoment?.kind==='reunion'?'Your little friend is home. Stay a little while.':state.chapter.stage===11?'The kettle, your blanket, and a little company. Take your time.':state.chapter.stage===1?'Approach your hatchling’s blanket and press E.':state.homecoming&&state.chapter.stage===0?'Sleep in your bed. Tomorrow can begin slowly.':!state.metRowan?'Take a moment with your things, if you like. E looks closer. Step outside whenever you’re ready.':objective(state) : adventure?adventure.objective():objective(state);
+  $('objective').textContent=touchCopy($('objective').textContent);
   music.setTheme(workshop ? workshop.isJourney ? 'journey' : 'workshop' : mill?mill.fighting?'guardian':mill.region==='return'?'journey':'woods':encounter ? encounter.guardianAwake && encounter.guardian.hp > 0 && !state.guardianFreed ? 'guardian' : 'woods' : 'village');
   $('place-name').textContent = homeActor ? 'Your cottage' : mill?mill.title:encounter ? 'Briarwood' : 'Hearthvale';
   $('place-description').textContent = homeActor ? 'Warm light and a quilt by the window.' : mill?mill.region==='mill'?'Old timbers. New bindings. A voice beneath the wheel.':mill.region==='return'?'A narrow channel, and the way home.':'The thorns have opened a way downstream.':encounter ? 'A narrow path beneath old trees.' : 'Where the hills breathe in their sleep.';
@@ -61,12 +69,14 @@ function refresh() {
   $('game').classList.toggle('has-riverstep',hasRiverstep(state));
   $('game').classList.toggle('cottage-reunion',homeMoment?.kind==='reunion');
   $('combat-hud').hidden = mill?!mill.fighting:!encounter;
+  $('game').classList.toggle('in-combat',!$('combat-hud').hidden);
   document.getElementById('game').classList.toggle('in-woods', !!adventure);
   $('leave-woods').hidden = !adventure;
   $('woods-button').hidden = !!adventure;
   $('woods-button').textContent=state.chapter.stage>=4&&state.chapter.stage<11?'Follow the lower woodland path':'Explore Briarwood';
   $('woods-button').disabled = !state.awakened;
   if(adventure) {
+    $('combat-objective').textContent=touchCopy(adventure.objective());
     const p=adventure.player;
     $('combat-hearts').textContent = '♥'.repeat(p.hp)+'♡'.repeat(p.maxHp-p.hp);
     $('combat-hearts').setAttribute('aria-label', `${p.hp} of ${p.maxHp} health`);
@@ -84,20 +94,20 @@ function worldDodge(){
 }
 function moveWanderer(actor,dt,isBlocked,speed){
   const v={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
-  let dx=Number(keys.has('right'))-Number(keys.has('left')),dy=Number(keys.has('down'))-Number(keys.has('up')),dashing=freeDash.time>0;
+  let {x:dx,y:dy}=movementInput(keys,thumbstick),dashing=freeDash.time>0;
   if(dashing){[dx,dy]=v[freeDash.direction];dt=Math.min(dt,freeDash.time);freeDash.time=Math.max(0,freeDash.time-dt);speed=300;}
   else if(dx||dy)actor.direction=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';
   let moved=false;
-  if(dx||dy){const n=Math.hypot(dx,dy),mx=dx/n*speed*dt,my=dy/n*speed*dt,steps=Math.max(1,Math.ceil(Math.hypot(mx,my)/2));for(let i=0;i<steps;i++){if(!isBlocked(actor.x+mx/steps,actor.y,dashing)){actor.x+=mx/steps;moved=true;}if(!isBlocked(actor.x,actor.y+my/steps,dashing)){actor.y+=my/steps;moved=true;}}}
+  if(dx||dy){const mx=dx*speed*dt,my=dy*speed*dt,steps=Math.max(1,Math.ceil(Math.hypot(mx,my)/2));for(let i=0;i<steps;i++){if(!isBlocked(actor.x+mx/steps,actor.y,dashing)){actor.x+=mx/steps;moved=true;}if(!isBlocked(actor.x,actor.y+my/steps,dashing)){actor.y+=my/steps;moved=true;}}}
   if(dashing&&freeDash.time===0&&isBlocked(actor.x,actor.y))Object.assign(actor,freeDash.safe);
   actor.walk=moved?(actor.walk||0)+dt*11:0;return moved;
 }
 function startMillChapter(){
   if(state.chapter.stage<4||state.chapter.stage>=11)return;
-  homeActor=null;state.insideHome=false;encounter=null;mill=new MillChapter(state,millEvents());keys.clear();closeOverlays();refresh();save();world.focus();
+  homeActor=null;state.insideHome=false;encounter=null;mill=new MillChapter(state,millEvents());clearInput();closeOverlays();refresh();save();world.focus();
 }
 function leaveMillChapter(defeated=false){
-  mill=null;state.insideHome=false;state.chapter.region=null;homeActor=null;keys.clear();state.x=LOWER_TRAIL.x;state.y=LOWER_TRAIL.y;state.direction='up';
+  mill=null;state.insideHome=false;state.chapter.region=null;homeActor=null;clearInput();state.x=LOWER_TRAIL.x;state.y=LOWER_TRAIL.y;state.direction='up';
   villageCompanion={x:state.x-18,y:state.y+12};rowanActor={...createRowanActor(state),x:490,y:480,place:'river',arrived:false,route:[]};
   refresh();save();world.focus();
   if(defeated)say('rowan',['Easy. Your little friend came straight back to me when you fell.','You’re safe. We can rest and try again. The bindings you broke will stay broken.'],null,'Rest a while');
@@ -126,11 +136,14 @@ function reuniteAtHome(){
   say('hatchling',['There is a scrape at the door.','Your hatchling is outside, muddy and out of breath, carrying an entirely unsuitable stick.','It squeezes past you, circles its blanket and settles down. You sit beside it. Its tail comes to rest across your foot.'],()=>{state.chapter.stage=11;homeMoment=null;homeActor={x:465,y:450,direction:'right',walk:0};refresh();save();toast('The path back · Your little friend came home.');},'Stay a little while');
 }
 function returnHome(defeated = false) {
-  encounter = null; homeActor = null; state.insideHome=false; keys.clear();
+  encounter = null; homeActor = null; state.insideHome=false; clearInput();
   state.x = defeated ? 160 : TRAIL.x; state.y = defeated ? 243 : 496; state.direction = 'down';
   villageCompanion = { x: state.x - 18, y: state.y + 12 };
   closeOverlays(); refresh(); save();
-  if(defeated) say('rowan', ['Your little friend wouldn’t leave the path until I helped you home. There’s tea on the table. Rest a while; the woods will keep.']);
+  if(defeated) say('rowan', [state.clearingQuiet
+    ? 'Sit a minute. I’ve got tea. The path to the guardian is clear now. Shall we try again, or would you like to go home?'
+    : 'Here, have some tea. Your little friend waited with you. Ready to try the trail again, or shall we go home?'],
+    startExpedition,'Try again at the lantern','Rest at the cottage',enterHome);
   else toast('Back in Hearthvale. Your garden has been waiting.');
 }
 function renderWorkshopText() {
@@ -181,7 +194,7 @@ function updateWorkshopButton() {
 }
 function startWorkshop(step=WORKSHOP.order[0]) {
   workshop=new WorkshopSequence(step);state.workshopStep=step;dialogue=null;nextAction=null;$('dialogue').hidden=true;
-  homeActor=null;keys.clear();openOverlay('workshop');$('game').inert=true;
+  homeActor=null;clearInput();openOverlay('workshop');$('game').inert=true;
   renderWorkshopText();refresh();save();(workshop.ready?$('workshop-next'):$('workshop')).focus();
 }
 function finishWorkshop() {
@@ -207,7 +220,7 @@ $('workshop-skip').onclick=skipOpeningScene;
 function startExpedition() {
   state.hasBlade = true; homeActor = null; state.insideHome=false;
   encounter = new WoodlandEncounter(state, { toast, say, changed: () => { refresh(); save(); }, home: returnHome });
-  keys.clear(); refresh(); save(); world.focus();
+  clearInput(); refresh(); save(); world.focus();
 }
 function offerExpedition() {
   if(state.chapter.stage>=4&&state.chapter.stage<11)return startMillChapter();
@@ -221,7 +234,7 @@ function offerExpedition() {
   ], startExpedition, 'Take the trail');
 }
 function enterHome() {
-  state.insideHome=true;homeActor = { ...HOME_ENTRY, direction: 'up', walk: 0 }; keys.clear(); refresh(); save(); world.focus();
+  state.insideHome=true;homeActor = { ...HOME_ENTRY, direction: 'up', walk: 0 }; clearInput(); refresh(); save(); world.focus();
   if(state.chapter.stage===10)return reuniteAtHome();
   if(activeMainQuest(state)?.[0]==='homecoming')say('A place for two',[
     'The hatchling stops on the threshold. You carry Aunt Wren’s spare blanket to a quiet corner and fold it twice, leaving a little hollow in the middle.',
@@ -229,7 +242,7 @@ function enterHome() {
   ],()=>{state.homecoming=true;save();refresh();},'Welcome home');
 }
 function leaveHome() {
-  homeActor = null; state.insideHome=false; state.x=160; state.y=243; state.direction='down'; keys.clear(); refresh(); save(); world.focus();
+  homeActor = null; state.insideHome=false; state.x=160; state.y=243; state.direction='down'; clearInput(); refresh(); save(); world.focus();
 }
 function interactHome() {
   if(state.chapter.stage===1&&Math.hypot(homeActor.x-492,homeActor.y-450)<46)return morningHatchling();
@@ -252,7 +265,7 @@ function interactHome() {
 }
 function openOverlay(id) {
   if (!overlays.some(key => !$(key).hidden)) previousFocus = document.activeElement;
-  keys.clear();
+  clearInput();
   overlays.forEach(key => $(key).hidden = key !== id);
   if (id === 'journal') renderJournal();
   if (id === 'inventory') renderInventory();
@@ -262,7 +275,7 @@ function openOverlay(id) {
 }
 function closeOverlays() {
   if (!started) return;
-  overlays.forEach(id => $(id).hidden = true); keys.clear();
+  overlays.forEach(id => $(id).hidden = true); clearInput();
   (previousFocus?.isConnected ? previousFocus : world).focus();
 }
 function togglePanel(id) {
@@ -335,7 +348,7 @@ function renderMap() {
 }
 function say(speaker, lines, callback = null, finalLabel = 'Continue', cancelLabel = null, cancelAction = null) {
   const person = CAST[speaker];
-  keys.clear(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel, cancelLabel, cancelAction }; nextAction = callback; renderDialogue();
+  clearInput(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel, cancelLabel, cancelAction }; nextAction = callback; renderDialogue();
   $('dialogue-next').focus();
 }
 function renderDialogue() {
@@ -343,7 +356,8 @@ function renderDialogue() {
   $('dialogue-portrait-frame').hidden = !hasPortrait;
   $('dialogue').classList.toggle('has-portrait', hasPortrait);
   $('dialogue').hidden = false; $('speaker').textContent = dialogue.speaker;
-  $('dialogue-text').textContent = dialogue.lines[dialogue.index];
+  const text=dialogue.lines[dialogue.index];
+  $('dialogue-text').textContent = /\bpress\b|click\/|click or|mouse button/i.test(text)?touchCopy(text):text;
   $('dialogue-next').textContent = dialogue.index === dialogue.lines.length-1 ? `${dialogue.finalLabel} [E]` : 'Continue [E]';
   $('dialogue-cancel').hidden=!dialogue.cancelLabel;
   if(dialogue.cancelLabel)$('dialogue-cancel').textContent=`${dialogue.cancelLabel} [Esc]`;
@@ -351,7 +365,7 @@ function renderDialogue() {
 function cancelDialogue() {
   if(!dialogue)return;
   const action=dialogue.cancelAction;
-  dialogue=null;nextAction=null;keys.clear();$('dialogue').hidden=true;
+  dialogue=null;nextAction=null;clearInput();$('dialogue').hidden=true;
   action?.();refresh();save();if(!dialogue)world.focus();
 }
 function advanceDialogue() {
@@ -451,7 +465,7 @@ $('character-name').oninput=()=>{$('character-name').setCustomValidity('');drawP
 $('cancel-creator').onclick=closeOverlays;
 function renderJournal() {
   $('journal-list').replaceChildren();
-  if(state.dragonBonded){const gifts=document.createElement('section');gifts.className='blessing-notes';const h=document.createElement('h3'),p=document.createElement('p');h.textContent=`Dragon Blessings · ${blessingCount(state)}`;p.textContent=hasRiverstep(state)?'Riverstep awakened. Face a direction and right-click or press X to glide farther. Cross narrow streams from marked stones.':`${blessingCount(state)===1?'The hatchling’s warmth remains in your palm.':'The hatchling and the guardian have each blessed you.'} A third blessing may awaken something more.`;gifts.append(h,p);$('journal-list').append(gifts);}
+  if(state.dragonBonded){const gifts=document.createElement('section');gifts.className='blessing-notes';const h=document.createElement('h3'),p=document.createElement('p');h.textContent=`Dragon Blessings · ${blessingCount(state)}`;p.textContent=hasRiverstep(state)?'Riverstep awakened. Face a direction and right-click or press X to glide farther. Cross narrow streams from marked stones.':`${blessingCount(state)===1?'The hatchling’s warmth remains in your palm.':'The hatchling and the guardian have each blessed you.'} A third blessing may awaken something more.`;p.textContent=touchCopy(p.textContent);gifts.append(h,p);$('journal-list').append(gifts);}
   function appendQuest(quest,parent,complete=false) {
     const [key,title,description,category]=quest;
     const done=complete||questComplete(state,key),item=document.createElement('div');item.className=`quest${done?' done':''}`;
@@ -459,7 +473,7 @@ function renderJournal() {
     const copy=document.createElement('div'),line=document.createElement('div');line.className='quest-title';
     const heading=document.createElement('h4');heading.textContent=title;
     const badge=document.createElement('span');badge.className=`quest-tag ${category}`;badge.textContent=category==='main'?'Main story':'Optional';
-    const text=document.createElement('p');text.textContent=description;line.append(heading,badge);copy.append(line,text);item.append(check,copy);parent.append(item);
+    const text=document.createElement('p');text.textContent=touchCopy(description);line.append(heading,badge);copy.append(line,text);item.append(check,copy);parent.append(item);
   }
   const mainHeading=document.createElement('h3');mainHeading.className='quest-group';mainHeading.textContent='Current main quest';$('journal-list').append(mainHeading);
   const current=activeMainQuest(state);
@@ -620,7 +634,7 @@ window.addEventListener('keydown',event=>{
   if(dialogue&&[' ','Enter'].includes(key)&&event.target===$('dialogue-cancel')) {
     event.preventDefault();if(!event.repeat)cancelDialogue();return;
   }
-  if(key==='Escape'){event.preventDefault();keys.clear();if(dialogue)cancelDialogue();else if(active)closeOverlays();else if(started)openOverlay('menu');return;}
+  if(key==='Escape'){event.preventDefault();clearInput();if(dialogue)cancelDialogue();else if(active)closeOverlays();else if(started)openOverlay('menu');return;}
   if (panelShortcuts[key] && started && !dialogue && active !== 'creator') {
     event.preventDefault(); if (!event.repeat) togglePanel(panelShortcuts[key]); return;
   }
@@ -634,8 +648,8 @@ window.addEventListener('keydown',event=>{
   if(['e',' ','Enter'].includes(key)){event.preventDefault();if(!event.repeat)interact();}
 });
 window.addEventListener('keyup',event=>{const key=event.key.length===1?event.key.toLowerCase():event.key;if(directionKeys[key])keys.delete(directionKeys[key]);if(key==='z')keys.delete('attack');});
-window.addEventListener('blur',()=>{keys.clear();save();});
-document.addEventListener('visibilitychange',()=>{keys.clear();if(document.hidden)save();music.setVisible(!document.hidden);});
+window.addEventListener('blur',()=>{clearInput();save();});
+document.addEventListener('visibilitychange',()=>{clearInput();if(document.hidden)save();music.setVisible(!document.hidden);});
 window.addEventListener('pagehide',save);
 // Mouse buttons leave the movement hand free. Track a held mouse attack
 // separately so releasing it does not cancel a held keyboard attack.
@@ -647,17 +661,51 @@ world.addEventListener('mousedown',event=>{
 });
 window.addEventListener('mouseup',event=>{if(event.button===0)keys.delete('mouseAttack');});
 world.addEventListener('contextmenu',event=>{if(mill||encounter||hasRiverstep(state))event.preventDefault();});
-document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',event=>{event.preventDefault();b.setPointerCapture(event.pointerId);keys.add(b.dataset.dir);});for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,()=>keys.delete(b.dataset.dir));});
+const touchMedia=window.matchMedia('(pointer: coarse), (max-width: 680px), (max-height: 480px)');
+function renderThumbstick(){
+  const base=$('thumbstick-base'),zone=$('move-zone'),active=thumbstick.pointerId!==null;
+  zone.classList.toggle('active',active);
+  if(active){const bounds=zone.getBoundingClientRect();base.style.left=`${thumbstick.originX-bounds.left}px`;base.style.top=`${thumbstick.originY-bounds.top}px`;}
+  else {base.style.removeProperty('left');base.style.removeProperty('top');}
+  $('thumbstick-knob').style.transform=`translate(${thumbstick.knobX}px,${thumbstick.knobY}px)`;
+}
+function clearInput(){
+  keys.clear();
+  const zone=$('move-zone'),id=thumbstick.pointerId;
+  if(id!==null&&zone.hasPointerCapture(id))zone.releasePointerCapture(id);
+  thumbstick.reset();renderThumbstick();
+  for(const [button,pointer] of actionPointers)if(button.hasPointerCapture(pointer))button.releasePointerCapture(pointer);
+  actionPointers.clear();
+  document.querySelectorAll('.touch-controls .pressed').forEach(b=>b.classList.remove('pressed'));
+}
+function setTouchLayout(){clearInput();$('game').classList.toggle('touch-mode',touchMedia.matches);}
+setTouchLayout();touchMedia.addEventListener('change',setTouchLayout);
+const moveZone=$('move-zone');
+moveZone.addEventListener('pointerdown',event=>{
+  if(event.button!==0||!started||isPaused())return;
+  event.preventDefault();
+  if(!thumbstick.start(event.pointerId,event.clientX,event.clientY))return;
+  moveZone.setPointerCapture(event.pointerId);moveZone.classList.add('used');renderThumbstick();
+});
+moveZone.addEventListener('pointermove',event=>{if(thumbstick.move(event.pointerId,event.clientX,event.clientY)){event.preventDefault();renderThumbstick();}});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])moveZone.addEventListener(name,event=>{if(thumbstick.release(event.pointerId))renderThumbstick();});
+window.addEventListener('pointerdown',event=>{if(event.pointerType==='touch')$('game').classList.add('touch-mode');},{capture:true});
 $('touch-interact').onclick=interact;
 document.querySelectorAll('[data-combat]').forEach(button=>{
-  button.addEventListener('pointerdown',event=>{event.preventDefault();button.setPointerCapture(event.pointerId);if(isPaused())return;if(mill||encounter)(mill||encounter).command(button.dataset.combat);else if(button.dataset.combat==='x')worldDodge();if(button.dataset.combat==='z')keys.add('attack');});
-  for(const name of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(name,()=>{if(button.dataset.combat==='z')keys.delete('attack');});
+  button.addEventListener('pointerdown',event=>{
+    if(event.button!==0||actionPointers.has(button)||isPaused())return;
+    event.preventDefault();actionPointers.set(button,event.pointerId);button.setPointerCapture(event.pointerId);button.classList.add('pressed');
+    if(mill||encounter)(mill||encounter).command(button.dataset.combat);else if(button.dataset.combat==='x')worldDodge();
+    if(button.dataset.combat==='z')keys.add('touchAttack');
+  });
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(name,event=>{if(event.pointerId!==actionPointers.get(button))return;actionPointers.delete(button);button.classList.remove('pressed');if(button.dataset.combat==='z')keys.delete('touchAttack');});
 });
 
-function resize(){const box=$('landscape').getBoundingClientRect();const zoom=Math.max(1.5,box.width/WORLD.width,box.height/WORLD.height);world.width=Math.round(box.width/zoom);world.height=Math.round(box.height/zoom);ctx.imageSmoothingEnabled=false;}
+function resize(){clearInput();const box=$('landscape').getBoundingClientRect();const zoom=Math.max(1.5,box.width/WORLD.width,box.height/WORLD.height);world.width=Math.round(box.width/zoom);world.height=Math.round(box.height/zoom);ctx.imageSmoothingEnabled=false;}
 window.addEventListener('resize',resize);resize();
 function tick(time){
   const dt=Math.min((time-lastTime)/1000||0,.05);lastTime=time;
+  document.querySelector('.touch-controls').hidden=!started||isPaused()||!!workshop;
   if(workshop){
     if(!document.hidden){workshop.update(dt);updateWorkshopButton();(workshop.isJourney?drawJourney:drawWorkshop)(workshopContext,workshop,state,reducedMotion);}
     requestAnimationFrame(tick);return;
@@ -669,11 +717,11 @@ function tick(time){
     freeDash.cooldown=Math.max(0,freeDash.cooldown-dt);
     updateRowan(rowanActor,state,dt,blocked);
     if(mill){
-      if(keys.has('attack')||keys.has('mouseAttack'))mill.command('z');
-      mill.update(dt,keys);state.minutes=Math.min(state.minutes+dt*2,1430);
+      if(keys.has('attack')||keys.has('mouseAttack')||keys.has('touchAttack'))mill.command('z');
+      mill.update(dt,keys,thumbstick);state.minutes=Math.min(state.minutes+dt*2,1430);
     } else if(encounter) {
-      if(keys.has('attack')||keys.has('mouseAttack')) encounter.command('z');
-      encounter.update(dt,keys);
+      if(keys.has('attack')||keys.has('mouseAttack')||keys.has('touchAttack')) encounter.command('z');
+      encounter.update(dt,keys,thumbstick);
     } else if(homeActor) {
       moveWanderer(homeActor,dt,homeBlocked,76);state.minutes=Math.min(state.minutes+dt*1.3,1430);
     } else {

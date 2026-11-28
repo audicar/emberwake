@@ -73,3 +73,17 @@ test('the hatchling, guardian and each bramble sprite are reachable from camp',(
   const e=new WoodlandEncounter(newState());
   for(const target of [HATCHLING,GUARDIAN,...e.enemies])assert.ok(queue.some(([x,y])=>Math.hypot(x-target.x,y-target.y)<20));
 });
+
+test('clearing the woodland persists across defeat, reload and return',()=>{
+  const state=newState();state.dragonBonded=true;
+  let saved;
+  const encounter=new WoodlandEncounter(state,{changed:()=>{saved=JSON.stringify(state);}});
+  for(const enemy of encounter.enemies)encounter.damageEnemy(enemy,enemy.hp);
+  const retry=new WoodlandEncounter(validateSave(JSON.parse(saved)));
+  assert.equal(retry.enemies.length,0);
+  assert.equal(retry.guardianAwake,true);
+  assert.equal(retry.player.hp,retry.player.maxHp);
+  assert.equal(retry.guardian.hp,retry.guardian.maxHp);
+  delete state.clearingQuiet;
+  assert.equal(validateSave(state).clearingQuiet,false);
+});

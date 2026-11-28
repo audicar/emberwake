@@ -1,6 +1,6 @@
-import { drawCharacter, drawTree } from './art.js?v=0.8.0';
-import { drawDragon } from './dragon.js?v=0.8.0';
-import { WOODS, WOODS_TREES, OBSTACLES, HATCHLING } from './combat.js?v=0.8.0';
+import { drawCharacter, drawTree } from './art.js?v=0.8.1';
+import { drawDragon } from './dragon.js?v=0.8.1';
+import { WOODS, WOODS_TREES, OBSTACLES, HATCHLING } from './combat.js?v=0.8.1';
 
 let ground;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(Math.round(x),Math.round(y),w,h);};
@@ -37,16 +37,36 @@ function bramble(c,e,time) {
   r(c,-4,-11,3,3,'#e6bd80');r(c,2,-11,3,3,'#e6bd80');r(c,-3,-11,1,3,'#354a3d');r(c,3,-11,1,3,'#354a3d');r(c,-2,-5,4,2,'#405f48');
   r(c,-11,-29,22,3,'#243e32');r(c,-10,-28,20*e.hp/e.maxHp,1,'#d3b57b');c.restore();
 }
+// Each pair of hits breaks one thorn loop. The gold knot dulls after its first hit.
+function drawBindings(c,g,time){
+  const bob=Math.sin(time*5)>.5?-2:0;
+  for(let strand=0;strand<Math.ceil(g.hp/2);strand++){
+    const y=g.y+bob-29+strand*5;
+    for(let step=0;step<7;step++){
+      const x=g.x-15+step*4,dy=step<3?step:6-step;
+      r(c,x,y+dy,5,4,g.flash>0?'#dfb3b1':'#493246');
+      r(c,x,y+dy,4,1,'#a87a89');
+      if(step===1||step===5){r(c,x,y+dy-3,2,4,'#4e3548');r(c,x-1,y+dy-4,2,2,'#c08f95');}
+    }
+    const knotX=g.x+(strand%2?6:-8);
+    r(c,knotX,y+1,5,5,'#60404f');
+    r(c,knotX+1,y+2,3,3,g.hp>=strand*2+2?'#ffdc8e':'#bba19c');
+  }
+}
 export function drawWilds(c,encounter,state,time,camera,map=false) {
   c.save();c.translate(-camera.x,-camera.y);c.drawImage(terrain(),0,0);
-  if(!state.guardianFreed){for(const e of encounter.targets())if(e.phase==='windup')ring(c,e.x,e.y,e.boss?76:32,'#e0a779');}
+  if(!state.guardianFreed)for(const e of encounter.targets())if(e.phase==='windup'){
+    const radius=e.boss?76:32;
+    c.fillStyle='#8e39432e';c.beginPath();c.arc(e.x,e.y,radius,0,2*Math.PI);c.fill();
+    ring(c,e.x,e.y,radius+1,'#604c43');ring(c,e.x,e.y,radius,'#ffdf97');
+    ring(c,e.x,e.y,radius*(1-e.timer/(e.boss?.95:.6)),'#efbd89');
+  }
   const sprites=WOODS_TREES.map(t=>({y:t.y,draw:()=>drawTree(c,t)}));
   for(const e of encounter.enemies)sprites.push({y:e.y,draw:()=>bramble(c,e,encounter.time)});
   const g=encounter.guardian;
   sprites.push({y:g.y,draw:()=>{
     drawDragon(c,g.x,g.y,{green:true,scale:2,time:encounter.time,calm:state.guardianFreed||g.hp<=0});
-    if(!state.guardianFreed&&g.hp>0){r(c,g.x-13,g.y-29,27,5,'#6f5266');r(c,g.x-2,g.y-31,5,9,'#baa1ad');
-      r(c,g.x-27,g.y-70,54,5,'#263e34');r(c,g.x-26,g.y-69,52*g.hp/g.maxHp,3,'#d1a174');}
+    if(!state.guardianFreed&&g.hp>0)drawBindings(c,g,encounter.time);
   }});
   if(!state.dragonBonded)sprites.push({y:HATCHLING.y,draw:()=>drawDragon(c,HATCHLING.x,HATCHLING.y,{time:encounter.time})});
   else sprites.push({y:encounter.companion.y,draw:()=>drawDragon(c,encounter.companion.x,encounter.companion.y,{direction:encounter.companion.direction,time:encounter.time})});
@@ -59,7 +79,14 @@ export function drawWilds(c,encounter,state,time,camera,map=false) {
   }});
   sprites.sort((a,b)=>a.y-b.y).forEach(s=>s.draw());
   if(!map){for(const bolt of encounter.projectiles){r(c,bolt.x-4,bolt.y-3,8,6,'#da9766');r(c,bolt.x-2,bolt.y-2,5,4,'#ffe0a0');}
-    for(const e of encounter.effects){if(e.kind==='stomp')ring(c,e.x,e.y,e.radius,'#f0cb8d');else for(let i=0;i<7;i++){const a=i*Math.PI*2/7,spread=(.8-e.life)*22;r(c,e.x+Math.cos(a)*spread,e.y+Math.sin(a)*spread,3,3,e.kind==='hurt'?'#ddaa98':e.kind==='leaves'?'#b2c68a':'#f4d49b');}}
+    for(const e of encounter.effects){if(e.kind==='snap'){
+      const spread=(.55-e.life)*40;
+      for(const side of [-1,1]){
+        const x=e.x+side*(8+spread),y=e.y-spread/2+spread*spread/48;
+        r(c,x,y,6,3,'#543a4b');r(c,x+2,y-2,2,3,'#d09ca2');
+        r(c,x-side*4,y-3,2,2,'#ffe2a6');
+      }
+    }else if(e.kind==='stomp')ring(c,e.x,e.y,e.radius,'#f0cb8d');else for(let i=0;i<7;i++){const a=i*Math.PI*2/7,spread=(.8-e.life)*22;r(c,e.x+Math.cos(a)*spread,e.y+Math.sin(a)*spread,3,3,e.kind==='hurt'?'#ddaa98':e.kind==='leaves'?'#b2c68a':'#f4d49b');}}
   }
   c.restore();
 }

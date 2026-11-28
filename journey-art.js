@@ -1,6 +1,6 @@
-import { drawCharacter } from './character.js?v=0.8.0';
-import { PALETTES } from './core.js?v=0.8.0';
-import { drawWorld } from './art.js?v=0.8.0';
+import { drawCharacter } from './character.js?v=0.8.1';
+import { PALETTES } from './core.js?v=0.8.1';
+import { drawWorld } from './art.js?v=0.8.1';
 
 const W=384,H=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(Math.round(x),Math.round(y),w,h);};

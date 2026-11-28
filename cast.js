@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.8.0';
-import { drawDragon } from './dragon.js?v=0.8.0';
+import { drawCharacter } from './character.js?v=0.8.1';
+import { drawDragon } from './dragon.js?v=0.8.1';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {

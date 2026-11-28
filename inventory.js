@@ -8,7 +8,7 @@ const ITEMS = [
 
 // Quantities are derived from existing saves, including flowers left at the shrine.
 export function inventoryItems(state) {
-  const quantities = { seeds: state.seeds, moonroot: state.moonroot, starflowers: state.awakened ? 0 : state.flowers.length, 'watering-can': state.metRowan ? 1 : 0, blade: state.hasBlade ? 1 : 0 };
+  const quantities = { seeds: state.seeds, moonroot: state.moonroot, starflowers: state.awakened ? 0 : state.flowers.length, 'watering-can': state.receivedSeeds ? 1 : 0, blade: state.hasBlade ? 1 : 0 };
   return ITEMS.filter(item => item.id !== 'blade' || state.hasBlade).map(item => ({ ...item, quantity: quantities[item.id] }));
 }
 

@@ -9,3 +9,5 @@ Keep the public README spoiler-free: describe the premise, mood, features and co
 Keep essential quest context and instructions in the journal as well as dialogue. Include the reason for the task, required quantities, destination and interaction key where relevant, so progress does not depend on remembering a conversation.
 
 Use the shared `unknown` portrait for unidentified voices. Keep their appearance and location unrevealed until the story establishes them; narration and object interactions do not need a speaker portrait.
+
+Keep changes local and uncommitted. Commit, push or publish only when the user explicitly requests it.

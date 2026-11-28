@@ -1,4 +1,5 @@
 // The small, serialisable part of the game. Rendering and browser APIs live elsewhere.
+import { isWorkshopStep } from './workshop-script.js?v=0.7.4';
 export const SAVE_KEY = 'emberwake.save.v1';
 export const PALETTES = {
   // Append shades so existing saves and villagers keep their original colours.
@@ -16,7 +17,8 @@ export const STYLES = {
 export const FLOWERS = [{ id: 'f1', x: 452, y: 215 }, { id: 'f2', x: 480, y: 424 }, { id: 'f3', x: 200, y: 440 }];
 export const PLOTS = [{ x: 256, y: 344 }, { x: 280, y: 344 }, { x: 304, y: 344 }];
 export const QUESTS = [
-  ['metRowan', 'A neighbourly hello', 'Find Rowan beside the garden, just south of the village square.', 'main'],
+  ['metRowan', 'A neighbourly hello', 'Rowan is near your cottage’s front door. Step outside whenever you are ready and press E to say hello.', 'main'],
+  ['rowanRiver', 'A little company', 'Rowan invited you to the river. Meet him on the west bank, just south of the wooden bridge, and press E to talk. He will wait if you want to wander first. M shows where he is.', 'main'],
   ['harvested', 'Something worth tending', 'Plant and water a moonroot. Go inside your cottage, sleep in the bed, then harvest it.', 'main'],
   ['flowers', 'A handful of starlight', 'Gather three starflowers around the village and meadow. M marks the ones still growing.', 'main'],
   ['awakened', 'The dream beneath the hill', 'Rowan told you Aunt Wren used to take three starflowers to the old shrine. She said the hill slept easier afterwards. Bring 1 moonroot and 3 starflowers east across the wooden bridge. Press E beside the shrine to place them in the offering bowl.', 'main'],
@@ -26,14 +28,18 @@ export const QUESTS = [
   ['metMira', 'A visit to the tailor', 'Introduce yourself to Mira outside the blue-roofed cottage.', 'optional'],
 ];
 export function questComplete(state,key) { return key === 'flowers' ? state.flowers.length === 3 : state[key] === true; }
-export function activeMainQuest(state) { return QUESTS.find(q => q[3] === 'main' && !questComplete(state,q[0])) ?? null; }
+export function activeMainQuest(state) {
+  const quest=QUESTS.find(q => q[3] === 'main' && !questComplete(state,q[0])) ?? null;
+  if(quest?.[0]==='harvested'&&!state.receivedSeeds)return [quest[0],quest[1],'If you feel like trying the village garden, ask Rowan about it. He is by the river, south of the bridge, and has seeds to share. Press E to talk; M shows his location.',quest[3]];
+  return quest;
+}
 export function completedMainQuests(state) {
   const completed=[];
   for(const quest of QUESTS.filter(q=>q[3]==='main')) { if(!questComplete(state,quest[0]))break;completed.push(quest); }
   return completed;
 }
 export function newState(appearance = {}) {
-  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, insideHome: false, workshopStep: null, metRowan: false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, guardianFreed: false, homecoming: false };
+  return { version: 1, name: 'Lina', appearance: { skin: 0, hair: 0, colour: 0, hairStyle: 4, outfit: 3, accessory: 4, gender: 0, ...appearance }, x: 272, y: 278, direction: 'down', day: 1, minutes: 480, insideHome: false, workshopStep: null, metRowan: false, rowanRiver:false, receivedSeeds:false, payPacketRead:false, workNotebookRead:false, clockUnwound:false, metMira: false, seeds: 0, flowers: [], plots: [null, null, null], moonroot: 0, harvested: false, awakened: false, hasBlade: false, dragonBonded: false, guardianFreed: false, homecoming: false };
 }
 export function validateSave(value) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 20) throw new Error('This is not an Emberwake save.');
@@ -47,6 +53,10 @@ export function validateSave(value) {
   s.x = value.x; s.y = value.y; s.name = value.name.trim();
   s.direction = ['up', 'down', 'left', 'right'].includes(value.direction) ? value.direction : 'down';
   for (const key of ['metRowan', 'metMira', 'harvested', 'awakened']) s[key] = value[key] === true;
+  for(const key of ['rowanRiver','receivedSeeds','payPacketRead','workNotebookRead','clockUnwound']) {
+    if(value[key]!==undefined&&typeof value[key]!=='boolean')throw new Error('The saved cottage progress is invalid.');
+    s[key]=value[key]===undefined&&['rowanRiver','receivedSeeds'].includes(key)?s.metRowan:value[key]===true;
+  }
   for (const [key, options] of Object.entries({ ...PALETTES, ...STYLES })) {
     const n = key === 'gender' && value.appearance?.gender === undefined ? 0 : value.appearance?.[key];
     if (!Number.isInteger(n) || n < 0 || n >= options.length) throw new Error('The saved appearance is invalid.');
@@ -58,7 +68,7 @@ export function validateSave(value) {
   }
   if (s.homecoming && !s.guardianFreed) throw new Error('The saved homecoming is invalid.');
   if(value.workshopStep!==undefined&&value.workshopStep!==null) {
-    if(!Number.isInteger(value.workshopStep)||value.workshopStep<0||value.workshopStep>13)throw new Error('The saved opening scene is invalid.');
+    if(!isWorkshopStep(value.workshopStep))throw new Error('The saved opening scene is invalid.');
     s.workshopStep=value.workshopStep;
   }
   if (s.guardianFreed && !s.dragonBonded) throw new Error('The saved dragon bond is invalid.');
@@ -74,7 +84,7 @@ export function validateSave(value) {
 }
 export function isGrown(s, i) { const p = s.plots[i]; return !!p && p.watered && s.day > p.planted; }
 export function tend(s, i) {
-  if (!s.metRowan) return 'Rowan has seeds to get you started. Say hello first.';
+  if (!s.receivedSeeds) return 'Rowan has seeds to share if you feel like gardening. Ask him when you are ready.';
   if (isGrown(s, i)) { s.plots[i] = null; s.moonroot++; s.harvested = true; return 'A moonroot! Warm as a little cup of tea.'; }
   if (!s.plots[i]) {
     if (!s.seeds) return 'The soil can rest now. There’s no hurry to fill every bed.';
@@ -86,7 +96,9 @@ export function tend(s, i) {
   return 'A tiny green promise. Let it grow overnight.';
 }
 export function objective(s) {
-  if (!s.metRowan) return 'Find Rowan by the village garden.';
+  if (!s.metRowan) return 'Say hello to Rowan outside your cottage when you are ready.';
+  if (!s.rowanRiver) return 'Meet Rowan by the river, south of the bridge. No hurry.';
+  if (!s.receivedSeeds) return 'When you feel like gardening, ask Rowan about the empty beds.';
   if (!s.harvested) {
     if (s.plots.some((_, i) => isGrown(s, i))) return 'Your moonroot is ready. Visit the garden.';
     if (s.plots.some(p => p?.watered)) return 'Sleep at your cottage. Let something grow.';

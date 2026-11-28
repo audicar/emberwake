@@ -5,12 +5,14 @@ import { newState, validateSave } from '../core.js';
 
 test('the workshop preserves the conversation and gives the invitation a silent response',()=>{
   const scene=new WorkshopSequence(),seen=[];
-  while(!scene.finished){seen.push(scene.beat);scene.update(5);assert.equal(scene.advance(),true);}
-  assert.equal(seen[0].shot,'establish');assert.equal(seen[1].shot,'notice');
-  assert.match(seen[1].text,/Your name isn’t there/);assert.match(seen[2].text,/your promotion/);
+  while(!scene.finished){seen.push(scene.beat);scene.update(Math.max(5,scene.beat.minSeconds||0));assert.equal(scene.advance(),true);}
+  assert.deepEqual(seen.slice(0,7).map(s=>s.shot),['first-spring','promise','new-idea','trusted','shared-method','winter-late','establish']);
+  assert.match(seen[1].text,/You’ve got a future here/);
+  assert.match(seen[6].text,/Four years/);
+  assert.match(seen[7].text,/Your name isn’t there/);assert.match(seen[8].text,/your promotion/);
   assert.deepEqual(seen.filter(s=>s.speaker==='player').map(s=>s.text),['You said that last season.']);
-  assert.deepEqual(seen.filter(s=>s.scene!=='journey').slice(-4).map(s=>s.shot),['silence','find-letter','letter','fold-letter']);
-  assert.equal(seen.filter(s=>s.scene!=='journey').at(-1).text,'');assert.match(seen[5].text,/You’re the only one I can trust/);
+  assert.deepEqual(seen.filter(s=>s.scene!=='journey').slice(-5).map(s=>s.shot),['silence','finished-order','find-letter','letter','fold-letter']);
+  assert.equal(seen.filter(s=>s.scene!=='journey').at(-1).text,'');assert.match(seen[11].text,/You’re the only one I can trust/);
   assert.equal(scene.advance(),false);
 });
 test('the quiet final beat cannot be advanced immediately, but can be skipped',()=>{
@@ -28,7 +30,7 @@ test('opening progress round-trips while existing saves do not replay it',()=>{
   }
   const older=newState();delete older.workshopStep;
   assert.equal(validateSave(older).workshopStep,null);
-  for(const value of [-1,14,1.5,'1',false])assert.throws(()=>validateSave({...older,workshopStep:value}));
+  for(const value of [-1,WORKSHOP.steps.length,1.5,'1',false])assert.throws(()=>validateSave({...older,workshopStep:value}));
   for(const [step,shot] of ['notice','conversation','conversation','conversation','request','silence'].entries()) {
     assert.equal(new WorkshopSequence(step).beat.shot,shot,'older in-progress saves retain their scene');
   }

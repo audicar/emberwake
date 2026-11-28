@@ -8,7 +8,7 @@ A little life beside a sleeping dragon. A small, single-player browser game abou
 
 Make a home in a small village beneath a sleeping mountain. Grow a garden, get to know your neighbours, and explore paths where old stories are beginning to stir. Build a bond with dragons in a gentle fantasy adventure about kindness, belonging and finding your courage.
 
-This free, single-player prototype currently offers roughly ten minutes of play, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Your chosen character also appears in a short opening scene. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
+This free, single-player prototype currently offers roughly ten minutes of play, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Your chosen character also appears in an animated opening with close-ups, dialogue and changing seasons. The cottage has optional personal interactions, and an early riverside invitation gives you time to meet a neighbour before choosing to garden. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
 
 ## Controls
 

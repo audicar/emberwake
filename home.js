@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.6.5';
-import { drawDragon } from './dragon.js?v=0.6.5';
+import { drawCharacter } from './character.js?v=0.7.4';
+import { drawDragon } from './dragon.js?v=0.7.4';
 
 export const HOME_ENTRY = { x: 416, y: 463 };
 export const HOME_START = { x: 445, y: 379 };
@@ -12,6 +12,14 @@ const bookcase = { x: 236, y: 352, w: 43, h: 43 };
 const table = { x: 351, y: 350, w: 74, h: 39 };
 const chair = { x: 371, y: 402, w: 30, h: 27 };
 const plant = { x: 565, y: 423, w: 23, h: 22 };
+const writingDesk={x:236,y:420,w:61,h:47};
+const bedsideCabinet={x:482,y:232,w:24,h:33};
+const travelBag={x:483,y:365,w:28,h:13};
+export const HOME_MEMORIES=[
+  {x:489,y:350,w:20,h:13,type:'payPacket',label:'Look at your last pay packet',reach:22},
+  {...writingDesk,type:'workNotebook',label:'Open your work notebook',reach:22},
+  {x:487,y:218,w:14,h:18,type:'alarmClock',label:'Look at the alarm clock',reach:31},
+];
 // Include raised surfaces and chair backs: stopping only at their feet lets
 // the player stand on the visible furniture when approaching from above.
 const furniture = [
@@ -19,6 +27,7 @@ const furniture = [
   {...bookcase,y:bookcase.y-49,h:bookcase.h+52},
   {...table,y:table.y-12,h:table.h+12},
   {...chair,y:chair.y-8,h:chair.h+11},plant,
+  writingDesk,bedsideCabinet,travelBag,
 ];
 export function homeBlocked(x,y) {
   return x<226||x>606||y<229||y>478||furniture.some(o=>x>o.x-5&&x<o.x+o.w+5&&y>o.y-3&&y<o.y+o.h+3);
@@ -30,6 +39,7 @@ function distanceTo(actor,target) {
 }
 export function homeInteraction(actor) {
   const targets=[
+    ...HOME_MEMORIES,
     {...bed,type:'bed',label:'Rest in your bed',reach:22},
     {x:416,y:474,type:'exit',label:'Step outside',reach:34},
     {...wardrobe,type:'wardrobe',label:'Open your wardrobe',reach:22},
@@ -87,6 +97,44 @@ function drawTable(c) {
   r(c,cx+2,cy-8,3,24,'#826348');r(c,cx+25,cy-8,3,24,'#826348');r(c,cx+3,cy-8,24,4,'#b89569');r(c,cx+9,cy-4,3,10,'#b89569');r(c,cx+18,cy-4,3,10,'#b89569');
   r(c,cx,cy+8,30,10,'#c4a476');r(c,cx+2,cy+18,4,12,'#70543f');r(c,cx+24,cy+18,4,12,'#70543f');
 }
+function drawKeepsakeFurniture(c) {
+  const {x,y,w}=writingDesk;
+  r(c,x+3,y+19,5,28,'#70523e');r(c,x+w-8,y+19,5,28,'#70523e');
+  r(c,x-2,y,w+4,22,'#75573f');r(c,x,y,w,17,'#c19b6c');r(c,x+3,y+2,w-6,2,'#ddbd8b');
+  r(c,x+7,y+19,w-14,12,'#a1805c');r(c,x+26,y+23,8,2,'#e2c28d');
+  // A pen and ink pot belong to the writing desk, not the kitchen table.
+  r(c,x+47,y+5,6,7,'#526b66');r(c,x+48,y+4,4,2,'#b6c2a7');r(c,x+42,y+6,2,9,'#d9c295');
+  const bx=bedsideCabinet.x,by=bedsideCabinet.y;
+  r(c,bx,by,24,29,'#846449');r(c,bx-1,by,26,5,'#d1ac7b');
+  r(c,bx+3,by+7,18,14,'#b68d63');r(c,bx+10,by+12,5,2,'#efd39b');
+  r(c,bx+2,by+28,4,5,'#70523e');r(c,bx+18,by+28,4,5,'#70523e');
+}
+function drawKeepsakes(c,state) {
+  // The open travel bag makes the packet a visible, separate interaction.
+  r(c,487,347,20,4,'#67503d');r(c,483,355,28,23,'#67503d');
+  r(c,485,359,24,16,'#a08058');r(c,488,362,18,10,'#b99a6a');
+  r(c,486,352,22,7,'#3e4033');
+  const py=state.payPacketRead?354:350;
+  r(c,489,py,20,13,'#bda47c');r(c,490,py,18,11,'#f2e3bf');
+  r(c,493,py+4,11,1,'#ac9672');r(c,493,py+7,8,1,'#ac9672');r(c,503,py+1,3,2,'#b68576');
+  r(c,485,365,24,5,'#8c6d4d');r(c,495,368,5,4,'#dfc18a');
+  // The notebook stays open at its first page when the player leaves it open.
+  if(state.workNotebookRead) {
+    r(c,245,423,31,17,'#405b57');r(c,247,423,13,14,'#e7ddbd');r(c,261,423,13,14,'#f3e7c8');
+    r(c,260,423,1,15,'#b49b77');
+    for(const yy of [426,430,434]){r(c,249,yy,8,1,'#ad9a79');r(c,263,yy,7,1,'#ad9a79');}
+  } else {
+    r(c,247,423,26,18,'#3f5752');r(c,250,423,23,16,'#729489');r(c,251,424,20,1,'#a9bb9c');
+    r(c,256,429,10,1,'#d8cca3');r(c,258,432,6,1,'#d8cca3');r(c,250,439,23,2,'#e3d5b2');
+  }
+  // Twin bells, a pale clock face and a winding key distinguish it from a jar.
+  r(c,487,219,5,3,'#d6bd86');r(c,498,219,5,3,'#d6bd86');r(c,490,217,10,2,'#786148');
+  r(c,488,222,14,12,'#675944');r(c,490,220,10,16,'#675944');
+  r(c,490,223,10,10,'#f0e2bb');r(c,492,221,6,14,'#f0e2bb');
+  r(c,494,225,1,5,'#5b6456');r(c,494,229,4,1,'#5b6456');r(c,489,235,3,2,'#675944');r(c,498,235,3,2,'#675944');
+  if(state.clockUnwound){r(c,499,240,6,1,'#bb9b65');r(c,503,239,3,3,'#e2c58b');}
+  else {r(c,503,234,1,7,'#bb9b65');r(c,502,233,3,3,'#e2c58b');}
+}
 function roomBackground() {
   if(room)return room;
   room=document.createElement('canvas');room.width=832;room.height=576;const c=room.getContext('2d');
@@ -101,13 +149,14 @@ function roomBackground() {
   r(c,319,314,158,139,'#927867');r(c,324,319,148,129,'#bd9c89');r(c,329,324,138,119,'#c9b29a');r(c,334,329,128,109,'#89a18b');r(c,338,333,120,101,'#b9bc99');
   for(let y=338;y<430;y+=12)for(let x=343;x<455;x+=12)r(c,x,y,3,3,'#a2ae8c');
   r(c,391,470,50,15,'#625845');r(c,398,473,36,10,'#d6c39a');r(c,405,476,22,4,'#b3a07c');
-  drawWardrobe(c);drawKitchen(c);drawBed(c);drawBookcase(c);drawTable(c);
+  drawWardrobe(c);drawKitchen(c);drawBed(c);drawBookcase(c);drawTable(c);drawKeepsakeFurniture(c);
   r(c,plant.x+2,plant.y+2,19,20,'#b78063');r(c,plant.x,plant.y,23,5,'#d2a17c');r(c,plant.x+9,plant.y-24,4,27,'#708760');
   r(c,plant.x-5,plant.y-19,17,9,'#8faa76');r(c,plant.x+12,plant.y-30,17,9,'#a6bc8a');r(c,plant.x+3,plant.y-35,11,13,'#91ac79');
   return room;
 }
 export function drawHome(c,actor,state,time,camera) {
   c.save();c.translate(-camera.x,-camera.y);c.drawImage(roomBackground(),0,0);
+  drawKeepsakes(c,state);
   if(state.guardianFreed){r(c,470,433,45,26,'#b18e7b');r(c,473,436,39,20,'#cfb4a0');r(c,476,439,33,14,'#dfc9ad');}
   if(state.dragonBonded)drawDragon(c,state.homecoming?492:actor.x-24,state.homecoming?450:actor.y+12,{direction:'down',time:time/1000});
   drawCharacter(c,actor.x,actor.y,state.appearance,actor.direction,actor.walk||0);c.restore();

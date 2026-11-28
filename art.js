@@ -1,8 +1,9 @@
-import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.6.5';
-import { drawCharacter } from './character.js?v=0.6.5';
-export { drawCharacter } from './character.js?v=0.6.5';
-import { CAST } from './cast.js?v=0.6.5';
-import { drawDragon } from './dragon.js?v=0.6.5';
+import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.7.4';
+import { drawCharacter } from './character.js?v=0.7.4';
+export { drawCharacter } from './character.js?v=0.7.4';
+import { CAST } from './cast.js?v=0.7.4';
+import { drawDragon } from './dragon.js?v=0.7.4';
+import { rowanPosition } from './settling.js?v=0.7.4';
 export { tree as drawTree };
 export const WORLD = { width: 832, height: 576 };
 export const BUILDINGS = [{ x: 112, y: 144, w: 96, h: 80, name: 'Your cottage', roof: '#ad6a52' }, { x: 320, y: 112, w: 96, h: 80, name: 'Mira’s stitches', roof: '#67778a' }, { x: 112, y: 352, w: 64, h: 64, name: 'The potting shed', roof: '#a77f4f' }];
@@ -63,7 +64,7 @@ function house(c,b) {
   for (const wx of [x+14,x+w-29]) { rect(c,wx-2,y+43,19,21,'#8e8060');rect(c,wx,y+45,15,15,'#6d9291');rect(c,wx+2,y+47,5,5,'#d9dfb1');rect(c,wx+6,y+45,2,15,'#c8b990');rect(c,wx,y+51,15,2,'#c8b990');rect(c,wx-3,y+62,22,4,'#8c6549'); for(let i=0;i<4;i++){rect(c,wx+i*4,y+60,3,3,'#7e9859');rect(c,wx+i*4,y+58,2,2,i%2?'#e7b57b':'#b8a2a3');} }
 }
 function flowers(c,x,y,colour) { rect(c,x,y-4,1,5,'#526f41');rect(c,x-2,y-6,5,3,colour);rect(c,x-1,y-7,3,5,colour);rect(c,x,y-5,1,1,'#f6dda0'); }
-export function drawWorld(c, s, time, camera, companion = null) {
+export function drawWorld(c, s, time, camera, companion = null, rowan = null, {showRowan = true} = {}) {
   c.save();c.translate(-camera.x,-camera.y);
   rect(c,0,0,832,576,'#95a97b');
   // The distant ridge is kept in the map, so it remains still when the camera follows you.
@@ -100,8 +101,14 @@ export function drawWorld(c, s, time, camera, companion = null) {
   for(const [x,y] of [[100,235],[212,231]]){rect(c,x,y,8,8,'#ac8061');rect(c,x-2,y-4,12,7,'#5b824d');flowers(c,x+4,y-2,'#dbb28f');}
   for(const [x,y] of [[192,389],[202,396]]){rect(c,x,y,10,10,'#a88d62');rect(c,x+2,y+2,6,6,'#94774f');rect(c,x+4,y,2,10,'#bea071');}
   for(const f of FLOWERS)if(!s.flowers.includes(f.id)){rect(c,f.x-4,f.y-5,9,1,'#f8e6ae');rect(c,f.x,f.y-9,1,9,'#f8e6ae');flowers(c,f.x,f.y,'#eee0a3');rect(c,f.x-4,f.y-4,2,2,'#eee0a3');rect(c,f.x+3,f.y-4,2,2,'#eee0a3');if(Math.sin(time/450+f.x)>0.7)rect(c,f.x+5,f.y-12,1,2,'#fff0bd');}
-  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[CAST.rowan,CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance)})),...(s.dragonBonded?[{y:(companion?.y??s.y+12),draw:()=>drawDragon(c,companion?.x??s.x-18,companion?.y??s.y+12,{direction:s.direction,time:time/1000})}]:[]),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
+  const rowanHere={...CAST.rowan,...(rowan||rowanPosition(s))};
+  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[...(showRowan?[rowanHere]:[]),CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance,person.direction||'down',person.walk||0)})),...(s.dragonBonded?[{y:(companion?.y??s.y+12),draw:()=>drawDragon(c,companion?.x??s.x-18,companion?.y??s.y+12,{direction:s.direction,time:time/1000})}]:[]),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
   sprites.sort((a,b)=>a.y-b.y).forEach(spr=>spr.draw());
+  if(showRowan&&s.metRowan&&!s.receivedSeeds&&(!rowan||rowan.arrived)) {
+    // His own fishing spot, with the float in the water on the right.
+    for(let i=0;i<13;i++)rect(c,rowanHere.x+5+i*2,rowanHere.y-18-i,2,1,'#8c7351');
+    rect(c,rowanHere.x+30,rowanHere.y-30,1,27,'#d2cfac');rect(c,rowanHere.x+28,rowanHere.y-3,5,2,'#d6ac7b');
+  }
   // Chimney smoke and butterflies are purely decorative.
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches){for(const b of BUILDINGS){for(let i=0;i<3;i++){const phase=(time/90+i*10)%38;rect(c,b.x+b.w-17+Math.sin(phase/9)*3,b.y-10-phase,4+Math.floor(phase/10),3,'#e0deba40');}}for(let i=0;i<5;i++){const x=205+i*79+Math.sin(time/2400+i)*15,y=390+Math.sin(time/1800+i*5)*23;rect(c,x,y,Math.floor(time/150)%2?3:1,2,i%2?'#edc895':'#e8e7b6');}}
   // Evening is gentle: there is no time limit, exhaustion or forced bedtime.

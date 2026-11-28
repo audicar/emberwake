@@ -1,6 +1,6 @@
-import { drawCharacter, drawTree } from './art.js?v=0.6.5';
-import { drawDragon } from './dragon.js?v=0.6.5';
-import { WOODS, WOODS_TREES, OBSTACLES, HATCHLING } from './combat.js?v=0.6.5';
+import { drawCharacter, drawTree } from './art.js?v=0.7.4';
+import { drawDragon } from './dragon.js?v=0.7.4';
+import { WOODS, WOODS_TREES, OBSTACLES, HATCHLING } from './combat.js?v=0.7.4';
 
 let ground;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(Math.round(x),Math.round(y),w,h);};

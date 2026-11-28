@@ -1,6 +1,6 @@
-import { drawCharacter } from './character.js?v=0.6.5';
-import { PALETTES } from './core.js?v=0.6.5';
-import { drawWorld } from './art.js?v=0.6.5';
+import { drawCharacter } from './character.js?v=0.7.4';
+import { PALETTES } from './core.js?v=0.7.4';
+import { drawWorld } from './art.js?v=0.7.4';
 
 const W=384,H=216;
 const r=(c,x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(Math.round(x),Math.round(y),w,h);};
@@ -150,7 +150,8 @@ function arrive(c,t,state,reducedMotion) {
   const a=arrival.getContext('2d');a.imageSmoothingEnabled=false;
   const progress=reducedMotion?1:Math.min(1,Math.max(0,(t-.6)/2.8));
   const y=265-progress*30;
-  drawWorld(a,{...state,x:160,y,direction:'up',walk:progress>0&&progress<1?t*7:0},reducedMotion?0:t*1000,{x:32,y:115});
+  // Arrival is a private moment; Rowan is introduced during playable village life.
+  drawWorld(a,{...state,x:160,y,direction:'up',walk:progress>0&&progress<1?t*7:0},reducedMotion?0:t*1000,{x:32,y:115},null,null,{showRowan:false});
   // The same cottage and path as the playable village make the arrival legible.
   const bagY=Math.round(y-115-11);
   r(a,135,bagY-2,5,2,'#5a493a');r(a,134,bagY,9,8,'#806648');

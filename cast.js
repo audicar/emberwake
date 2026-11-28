@@ -1,9 +1,9 @@
-import { drawCharacter } from './character.js?v=0.6.5';
+import { drawCharacter } from './character.js?v=0.7.4';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {
   rowan: {
-    name: 'Rowan', label: 'Rowan · village gardener', x: 236, y: 311,
+    name: 'Rowan', label: 'Rowan', x: 236, y: 311,
     appearance: { skin: 2, hair: 0, colour: 5, hairStyle: 10, outfit: 0, accessory: 0, gender: 1 },
   },
   mira: {

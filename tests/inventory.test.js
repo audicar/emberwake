@@ -7,7 +7,7 @@ test('satchel quantities follow planting, harvests and offerings while retaining
   const state = newState();
   const counts = () => Object.fromEntries(inventoryItems(state).map(item => [item.id, item.quantity]));
   assert.deepEqual(counts(), { seeds: 0, moonroot: 0, starflowers: 0, 'watering-can': 0 });
-  state.metRowan = true; state.seeds = 3;
+  state.metRowan = true; state.rowanRiver = true; state.receivedSeeds = true; state.seeds = 3;
   assert.equal(counts()['watering-can'], 1);
   tend(state, 0); tend(state, 0);
   assert.equal(counts().seeds, 2);

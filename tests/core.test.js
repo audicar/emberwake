@@ -7,7 +7,7 @@ import { STYLES } from '../core.js';
 test('a full first chapter can be completed, saved and restored', () => {
   const s = newState();
   assert.match(tend(s, 0), /Rowan/);
-  s.metRowan = true; s.seeds = 3;
+  s.metRowan = true; s.rowanRiver = true; s.receivedSeeds = true; s.seeds = 3;
   tend(s, 0); assert.equal(s.seeds, 2);
   tend(s, 0); assert.equal(s.plots[0].watered, true);
   assert.equal(isGrown(s, 0), false);
@@ -21,13 +21,13 @@ test('a full first chapter can be completed, saved and restored', () => {
   assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
 });
 test('unwatered plants do not grow; watering later still works', () => {
-  const s = newState(); s.metRowan = true; s.seeds = 3;
+  const s = newState(); s.metRowan = true; s.rowanRiver = true; s.receivedSeeds = true; s.seeds = 3;
   tend(s, 1); s.day++; assert.equal(isGrown(s, 1), false);
   tend(s, 1); assert.equal(isGrown(s, 1), false);
   s.day++; assert.equal(isGrown(s, 1), true);
 });
 test('planting and harvesting cannot duplicate seeds or produce', () => {
-  const s = newState(); s.metRowan = true; s.seeds = 1;
+  const s = newState(); s.metRowan = true; s.rowanRiver = true; s.receivedSeeds = true; s.seeds = 1;
   tend(s, 0); tend(s, 0); tend(s, 0);
   assert.equal(s.seeds, 0); assert.equal(s.moonroot, 0);
   s.day++; tend(s, 0); tend(s, 0);

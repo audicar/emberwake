@@ -1,4 +1,4 @@
-import { PALETTES } from './core.js?v=0.6.5';
+import { PALETTES } from './core.js?v=0.7.4';
 
 function mix(hex, colour, amount) {
   const a=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
@@ -12,7 +12,7 @@ function tint(hex, amount) {
 
 // All shapes align to the sprite's pixel grid. Coordinates share a foot anchor in
 // the village, the wardrobe thumbnails and the larger character preview.
-export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 1) {
+export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 1, {drawArms = true} = {}) {
   const skin = PALETTES.skin[a.skin], hair = PALETTES.hair[a.hair], cloth = PALETTES.colour[a.colour];
   const ink = '#3b3542', cream = '#fff0d5', boot = '#795b56';
   const hairDark = tint(hair, -.20), hairLight = tint(hair, .18), hairShine = tint(hair, .27);
@@ -87,10 +87,12 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
     }
     // The near arm overlaps the side seam instead of framing both body edges.
     const armX=-2-stride,sleeve=[3,4,5,7].includes(outfit)?cream:clothLight;
-    r(armX,-21,4,1,clothDark);r(armX-1,-20,6,5,clothDark);
-    r(armX,-20,4,4,sleeve);r(armX,-16,4,1,sleeve);
-    r(armX,-15,4,1,clothDark);r(armX,-14,4,5,faceShade);
-    r(armX,-14,3,4,skin);r(armX,-10,3,1,light);
+    if(drawArms) {
+      r(armX,-21,4,1,clothDark);r(armX-1,-20,6,5,clothDark);
+      r(armX,-20,4,4,sleeve);r(armX,-16,4,1,sleeve);
+      r(armX,-15,4,1,clothDark);r(armX,-14,4,5,faceShade);
+      r(armX,-14,3,4,skin);r(armX,-10,3,1,light);
+    }
 
     // Rounded forehead, small projecting nose and a softly tucked-in chin.
     // No far-side ear or rectangular front-facing cheek is visible here.
@@ -173,7 +175,7 @@ export function drawCharacter(c, x, y, a, direction = 'down', step = 0, scale = 
   r(-shoulder,-21,shoulder*2,5,clothDark);r(-shoulder+1,-21,shoulder*2-2,4,clothLight);
   r(-waist,-17,waist*2,8,cloth);r(-hip,-11,hip*2,4,clothDark);r(-hip+1,-11,hip*2-2,3,cloth);
   r(-3,-22,6,3,shadow);r(-2,-22,4,3,skin);
-  for (const [ax, swing] of [[-shoulder-2,-stride],[shoulder-1,stride]]) {
+  if(drawArms)for (const [ax, swing] of [[-shoulder-2,-stride],[shoulder-1,stride]]) {
     r(ax,-19+swing,3,6,clothDark);r(ax,-19+swing,2,4,clothLight);
     r(ax,-13+swing,3,5,shadow);r(ax,-13+swing,2,4,skin);r(ax,-9+swing,2,1,light);
   }

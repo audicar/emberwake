@@ -1,14 +1,15 @@
-import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.6.5';
-import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.6.5';
-import { CAST, drawSpeakerPortrait } from './cast.js?v=0.6.5';
-import { inventoryItems, drawItemIcon } from './inventory.js?v=0.6.5';
-import { WoodlandEncounter, TRAIL } from './combat.js?v=0.6.5';
-import { drawWilds } from './wilds.js?v=0.6.5';
-import { BackgroundMusic } from './music.js?v=0.6.5';
-import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.6.5';
-import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.6.5';
-import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.6.5';
-import { drawJourney } from './journey-art.js?v=0.6.5';
+import { SAVE_KEY, PALETTES, STYLES, FLOWERS, PLOTS, QUESTS, newState, validateSave, tend, objective, awaken, isGrown, activeMainQuest, completedMainQuests, questComplete } from './core.js?v=0.7.4';
+import { WORLD, blocked, drawWorld, drawCharacter } from './art.js?v=0.7.4';
+import { CAST, drawSpeakerPortrait } from './cast.js?v=0.7.4';
+import { inventoryItems, drawItemIcon } from './inventory.js?v=0.7.4';
+import { WoodlandEncounter, TRAIL } from './combat.js?v=0.7.4';
+import { drawWilds } from './wilds.js?v=0.7.4';
+import { BackgroundMusic } from './music.js?v=0.7.4';
+import { HOME_ENTRY, HOME_BED, homeBlocked, homeInteraction, drawHome } from './home.js?v=0.7.4';
+import { WORKSHOP, WorkshopSequence, promotionNames } from './workshop-script.js?v=0.7.4';
+import { drawWorkshop, drawWorkshopPortrait } from './workshop-art.js?v=0.7.4';
+import { drawJourney } from './journey-art.js?v=0.7.4';
+import { COTTAGE_MEMORIES, rememberCottageObject, createRowanActor, updateRowan, finishRowanIntroduction, finishRiverVisit, receiveGardenSeeds } from './settling.js?v=0.7.4';
 
 const $ = id => document.getElementById(id);
 const world = $('world'), ctx = world.getContext('2d'), portrait = $('portrait').getContext('2d');
@@ -30,6 +31,7 @@ let workshop = null;
 const workshopContext=$('workshop-canvas').getContext('2d');
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let villageCompanion = { x: state.x - 18, y: state.y + 12 };
+let rowanActor=createRowanActor(state);
 
 function isPaused() { return overlays.some(id => !$(id).hidden) || !!dialogue; }
 function toast(message) { clearTimeout(toastTimer); $('toast').textContent = message; $('toast').hidden = false; toastTimer = setTimeout(() => $('toast').hidden = true, 4400); }
@@ -43,7 +45,7 @@ function refresh() {
   $('season').textContent = `SPRING · DAY ${state.day}`;
   const minutes = Math.floor(state.minutes / 10) * 10;
   $('clock').textContent = `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
-  $('objective').textContent = homeActor ? !state.metRowan ? 'Make yourself at home. Rowan is waiting outside.' : 'Your bed is on the east side of the cottage.' : encounter ? encounter.objective() : objective(state);
+  $('objective').textContent = homeActor ? !state.metRowan ? 'Take your time. Step outside whenever you feel ready.' : 'Your bed is on the east side of the cottage.' : encounter ? encounter.objective() : objective(state);
   music.setTheme(workshop ? workshop.isJourney ? 'journey' : 'workshop' : encounter ? encounter.guardianAwake && encounter.guardian.hp > 0 && !state.guardianFreed ? 'guardian' : 'woods' : 'village');
   $('place-name').textContent = homeActor ? 'Your cottage' : encounter ? 'Briarwood' : 'Hearthvale';
   $('place-description').textContent = homeActor ? 'Warm light and a quilt by the window.' : encounter ? 'A narrow path beneath old trees.' : 'Where the hills breathe in their sleep.';
@@ -76,8 +78,8 @@ function renderWorkshopText() {
   $('workshop').classList.toggle('workshop-journey',workshop.isJourney);
   $('workshop-speaker').textContent=beat.speaker==='player'?state.name:beat.speaker;
   $('workshop-text').textContent=beat.text;
-  $('workshop-dialogue').classList.toggle('workshop-silent',['silence','fold-letter','open-road'].includes(beat.shot));
-  $('workshop-canvas').parentElement.classList.toggle('workshop-wide',beat.shot==='establish'||workshop.isJourney);
+  $('workshop-dialogue').classList.toggle('workshop-silent',['silence','first-spring','new-idea','shared-method','finished-order','fold-letter','open-road'].includes(beat.shot));
+  $('workshop-canvas').parentElement.classList.toggle('workshop-wide',['establish','first-spring','new-idea','trusted','shared-method','winter-late','finished-order'].includes(beat.shot)||workshop.isJourney);
   const readingNotice=beat.shot==='notice';
   const readingLetter=beat.shot==='letter';
   $('workshop-notice').hidden=!readingNotice;
@@ -167,6 +169,11 @@ function interactHome() {
   if(!target)return toast('Your bed is on the east side. The wardrobe is in the north-west corner.');
   if(target.type==='exit')return leaveHome();
   if(target.type==='wardrobe')return openCreator(true);
+  if(COTTAGE_MEMORIES[target.type]) {
+    const memory=COTTAGE_MEMORIES[target.type];
+    const lines=target.type==='alarmClock'&&state.clockUnwound?['The winding key is resting beside the clock.']:target.type==='workNotebook'&&state.workNotebookRead?['Your notebook is open at the first page. You remember how excited you were.']:memory.lines;
+    return say(memory.title,lines,()=>rememberCottageObject(state,target.type),target.type==='alarmClock'&&state.clockUnwound?'Leave it there':memory.action,'Step away');
+  }
   if(target.type==='bed')return say('Your bed',[state.homecoming ? 'From the blanket in the corner comes a small, contented snore. You pull up the quilt. Rest until morning?' : 'The quilt still has the crooked star you stitched into it years ago. Aunt Wren mended carefully around it. Rest until morning?'],()=>{
     state.day++;state.minutes=420;homeActor={...HOME_BED,direction:'down',walk:0};
     toast(state.plots.some((_,i)=>isGrown(state,i))?'Morning light. Your moonroot has grown.':'Morning light and a warm cottage.');
@@ -229,16 +236,17 @@ function renderMap() {
   c.clearRect(0, 0, WORLD.width, WORLD.height); c.imageSmoothingEnabled = false;
   // Use the real world geometry, with daylight so the map stays legible at night.
   if(encounter) drawWilds(c, encounter, state, 0, { x: 0, y: 0 }, true);
-  else drawWorld(c, { ...state, walk: 0, minutes: 600 }, 0, { x: 0, y: 0 }, villageCompanion);
+  else drawWorld(c, { ...state, walk: 0, minutes: 600 }, 0, { x: 0, y: 0 }, villageCompanion,rowanActor);
   $('map-title').textContent = encounter ? 'Briarwood' : 'Hearthvale';
   $('map-region').textContent = encounter ? 'BRIARWOOD AND THE OLD STONE NEST' : 'THE VILLAGE AND THE EASTERN HILL';
   $('map-description').textContent = encounter ? 'The trail lantern, fallen log and old stone nest.' : 'Your cottage, the garden, and the path across the river.';
   canvas.setAttribute('aria-label', encounter ? 'Map of Briarwood. The trail home is south, the hatchling is beside the fallen log, and the guardian’s nest is north-east.' : 'Map of Hearthvale. Your cottage is west, the garden is in the centre, and the old shrine is across the eastern bridge.');
   const landmarks = encounter ? [['Trail home', 288, 546], ['Fallen log', 350, 435], ['Guardian’s nest', 620, 143]] : [
     ['Your cottage', 160, 142], ['Mira’s stitches', 368, 110],
-    ['Garden · Rowan', 280, 404], ['Old shrine', 720, 117],
+    ['Village garden', 280, 404], ['Old shrine', 720, 117],
     ['Bridge', 585, 293], ['Meadow', 394, 470], ['Briarwood trail', TRAIL.x, 552],
   ];
+  if(!encounter&&state.metRowan)landmarks.push(['Rowan',rowanActor.x,rowanActor.y-45]);
   $('map-landmarks').replaceChildren();
   for (const [name, x, y] of landmarks) {
     const label = document.createElement('span'); label.className = 'map-landmark'; label.textContent = name;
@@ -255,9 +263,9 @@ function renderMap() {
   $('map-player').style.left = `${actor.x / WORLD.width * 100}%`;
   $('map-player').style.top = `${actor.y / WORLD.height * 100}%`;
 }
-function say(speaker, lines, callback = null, finalLabel = 'Back to the village', cancelLabel = null) {
+function say(speaker, lines, callback = null, finalLabel = 'Back to the village', cancelLabel = null, cancelAction = null) {
   const person = CAST[speaker];
-  keys.clear(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel, cancelLabel }; nextAction = callback; renderDialogue();
+  keys.clear(); dialogue = { speaker: person?.label ?? speaker, portraitId: person ? speaker : null, lines, index: 0, finalLabel, cancelLabel, cancelAction }; nextAction = callback; renderDialogue();
   $('dialogue-next').focus();
 }
 function renderDialogue() {
@@ -272,14 +280,15 @@ function renderDialogue() {
 }
 function cancelDialogue() {
   if(!dialogue)return;
+  const action=dialogue.cancelAction;
   dialogue=null;nextAction=null;keys.clear();$('dialogue').hidden=true;
-  refresh();save();world.focus();
+  action?.();refresh();save();if(!dialogue)world.focus();
 }
 function advanceDialogue() {
   if (!dialogue) return;
   if (++dialogue.index < dialogue.lines.length) return renderDialogue();
   dialogue = null; $('dialogue').hidden = true;
-  const action = nextAction; nextAction = null; action?.(); refresh(); save(); world.focus();
+  const action = nextAction; nextAction = null; action?.(); refresh(); save();if(!dialogue)world.focus();
 }
 $('dialogue-next').onclick = advanceDialogue;
 $('dialogue-cancel').onclick = cancelDialogue;
@@ -365,7 +374,7 @@ $('character-form').onsubmit = event => {
   if(!name){$('character-name').setCustomValidity('Give your character a name.');$('character-name').reportValidity();return;}
   $('character-name').setCustomValidity('');
   if(editing){state.name=name;state.appearance={...draft};closeOverlays();save();toast('A fresh look. Still very much you.');}
-  else {state=newState(draft);state.x=160;state.y=243;state.insideHome=true;encounter=null;homeActor=null;villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();startWorkshop();}
+  else {state=newState(draft);state.x=160;state.y=243;state.insideHome=true;encounter=null;homeActor=null;rowanActor=createRowanActor(state);villageCompanion={x:state.x-18,y:state.y+12};state.name=name;started=true;closeOverlays();startWorkshop();}
   refresh();
 };
 $('character-name').oninput=()=>{$('character-name').setCustomValidity('');drawPortrait();};
@@ -389,11 +398,38 @@ function renderJournal() {
   if(completed.length){const history=document.createElement('details');history.className='quest-history';const summary=document.createElement('summary');summary.textContent=`Completed main quests · ${completed.length}`;history.append(summary);for(const quest of completed)appendQuest(quest,history,true);$('journal-list').append(history);}
   const optionalHeading=document.createElement('h3');optionalHeading.className='quest-group';optionalHeading.textContent='Village life · optional';$('journal-list').append(optionalHeading);
   for(const quest of QUESTS.filter(q=>q[3]==='optional'))appendQuest(quest,$('journal-list'));
-  $('journal-inventory').textContent = `${state.seeds} moonroot seeds · ${state.moonroot} moonroot · ${state.awakened?0:state.flowers.length} starflowers${state.metRowan?' · watering can':''}`;
+  $('journal-inventory').textContent = `${state.seeds} moonroot seeds · ${state.moonroot} moonroot · ${state.awakened?0:state.flowers.length} starflowers${state.receivedSeeds?' · watering can':''}`;
+}
+function offerGardenSeeds() {
+  say('rowan',[
+    'I keep the little garden in the square. There are some empty beds if you fancy growing anything.',
+    'Moonroot is an easy one. Plant a seed, water it, then let it have a night to grow. I have a few spare seeds and a watering can you can use.',
+    'Aunt Wren used to take three starflowers to the old shrine across the bridge. Said the hill slept easier afterwards. You can leave the flowers growing until your first harvest.',
+  ],()=>{if(receiveGardenSeeds(state))toast('Received: 3 moonroot seeds and a watering can.');},'Try a little gardening','Another time');
+}
+function talkToRowan() {
+  if(!state.metRowan) {
+    const introduced=()=>finishRowanIntroduction(state);
+    return say('rowan',[
+      'I’m Rowan. My aunt’s a friend of Aunt Wren’s. Thought I’d come and say hello.',
+      'I was going down to the river, just south of the bridge. Want to come?',
+    ],introduced,'A walk sounds nice','Maybe in a little while',introduced);
+  }
+  if(!rowanActor.arrived)return say('rowan',['There’s a little spot on the west bank, just south of the bridge. I’ll meet you there.']);
+  if(!state.receivedSeeds) {
+    const visited=()=>finishRiverVisit(state);
+    return say('rowan',state.rowanRiver?[
+      'Still no fish for Mira. I might have to confess that I’ve mostly been sitting here.',
+    ]:[
+      'That large one’s been taking my bait all spring. I’ve started recognising him.',
+      'I promised Mira a fish yesterday. I might have been a bit optimistic.',
+    ],()=>{visited();offerGardenSeeds();},'Ask about the garden','Watch the water a little longer',visited);
+  }
+  return say('rowan',[state.awakened?'The garden’s doing well. So’s the mountain, by the sound of it. Funny how those things go together.':!state.harvested?'Your seeds are ready whenever you are. The three dark beds in the village garden are yours to try.':'A fine first harvest. Take a moonroot and three starflowers to the shrine, over the eastern bridge. If you feel like it.']);
 }
 function nearest() {
   const things=[
-    {...CAST.rowan,type:'rowan',label:'Talk to Rowan'},
+    {...CAST.rowan,...rowanActor,type:'rowan',label:state.metRowan?'Talk to Rowan':'Say hello'},
     {...CAST.mira,type:'mira',label:'Talk to Mira'},
     {x:160,y:235,type:'home',label:'Enter your cottage'},
     {x:368,y:203,type:'tailor',label:'Visit the wardrobe'},
@@ -412,15 +448,7 @@ function interact() {
   if(encounter) { if(!encounter.interact()) toast('Move closer to the hatchling, guardian or trail lantern.'); return; }
   const t=nearest();if(!t)return toast('Wander a little closer to someone or something.');
   if(t.type==='trail') return offerExpedition();
-  if(t.type==='rowan'){
-    if(!state.metRowan)say('rowan',[
-      `You must be ${state.name}. I’m Rowan. My aunt’s a friend of your Aunt Wren. She asked if I could help you get settled.`,
-      'I brought seeds and a watering can. I wasn’t sure what you’d want to grow, so I picked something easy. Here — these are yours.',
-      'The three dark beds just beside me are yours. Plant a seed, water it, then go inside your cottage and rest in the bed. Moonroot only needs one good night.',
-      'And those pale starflowers? Pick a few if you see them. Aunt Wren used to take three to the old shrine across the bridge. Said the hill slept easier afterwards.',
-    ],()=>{state.metRowan=true;state.seeds=3;toast('Received: 3 moonroot seeds and a watering can.');});
-    else say('rowan', [state.awakened?'The garden’s doing well. So’s the mountain, by the sound of it. Funny how those things go together.':!state.harvested?'Plant, water, sleep. You can’t hurry a moonroot. Cottage is north-west, with the red roof.':'A fine first harvest. Take a moonroot and three starflowers to the shrine, over the eastern bridge. If you feel like it.']);
-  }
+  if(t.type==='rowan')return talkToRowan();
   if(t.type==='mira') {state.metMira=true;say('mira', [state.awakened?'I heard a noise from the hill last night. Rather like a very large cat purring. I suppose we’re keeping it?':'Welcome! My wardrobe’s always open — just walk up to the blue-roofed cottage. Everyone deserves clothes that feel like themselves.']);}
   if(t.type==='tailor')openCreator(true);
   if(t.type==='flower'){if(!state.harvested)return say('A starflower',['The flower holds a little warmth. Aunt Wren’s note said to leave these growing until your first harvest.']);state.flowers.push(t.id);toast(`Starflower gathered · ${state.flowers.length}/3. A little warm against your palm.`);}
@@ -452,7 +480,7 @@ overlays.forEach(id=>$(id).addEventListener('click',event=>{if(event.target===$(
 $('wardrobe').onclick=()=>openCreator(true);
 $('save-button').onclick=()=>{$('menu-status').textContent=save()?'Progress saved on this device.':'Browser storage is unavailable. Download your save instead.';};
 $('export-save').onclick=()=>{const {walk,...data}=state;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`emberwake-day-${state.day}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('menu-status').textContent='Save downloaded. Keep it somewhere safe.';};
-$('import-save').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>30000)throw new Error('That file is too large to be a game save.');const incoming=validateSave(JSON.parse(await file.text()));if(!confirm('Replace the current story with this save? Download your current save first if you want to keep it.'))return;state=incoming;encounter=null;homeActor=state.insideHome?{...HOME_ENTRY,direction:'up',walk:0}:null;villageCompanion={x:state.x-18,y:state.y+12};started=true;closeOverlays();save();refresh();if(state.workshopStep!==null)startWorkshop(state.workshopStep);else toast('Your story, right where you left it.');}catch(error){$('menu-status').textContent=error instanceof SyntaxError?'This file is not valid JSON.':error.message;}finally{event.target.value='';}};
+$('import-save').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>30000)throw new Error('That file is too large to be a game save.');const incoming=validateSave(JSON.parse(await file.text()));if(!confirm('Replace the current story with this save? Download your current save first if you want to keep it.'))return;state=incoming;rowanActor=createRowanActor(state);encounter=null;homeActor=state.insideHome?{...HOME_ENTRY,direction:'up',walk:0}:null;villageCompanion={x:state.x-18,y:state.y+12};started=true;closeOverlays();save();refresh();if(state.workshopStep!==null)startWorkshop(state.workshopStep);else toast('Your story, right where you left it.');}catch(error){$('menu-status').textContent=error instanceof SyntaxError?'This file is not valid JSON.':error.message;}finally{event.target.value='';}};
 $('restart').onclick=()=>{if(!confirm('Start a new story? Your current local save will be replaced when you begin. Download it first if you want to keep it.'))return;openCreator(false);};
 
 async function toggleSound() {
@@ -536,6 +564,7 @@ function tick(time){
   }
   moving=false;
   if(started&&!isPaused()&&!document.hidden){
+    updateRowan(rowanActor,state,dt,blocked);
     if(encounter) {
       if(keys.has('attack')||keys.has('mouseAttack')) encounter.command('z');
       encounter.update(dt,keys);
@@ -562,7 +591,7 @@ function tick(time){
   camera.y=Math.max(0,Math.min(WORLD.height-world.height,Math.round(actor.y-world.height*.52)));
   if(homeActor&&world.width>=420&&world.height>=352){camera.x=Math.max(0,Math.min(WORLD.width-world.width,416-world.width/2));camera.y=Math.max(0,Math.min(WORLD.height-world.height,325-world.height/2));}
   ctx.clearRect(0,0,world.width,world.height);
-  if(homeActor)drawHome(ctx,homeActor,state,time,camera);else if(encounter) drawWilds(ctx,encounter,state,time,camera); else drawWorld(ctx,state,time,camera,villageCompanion);
+  if(homeActor)drawHome(ctx,homeActor,state,time,camera);else if(encounter) drawWilds(ctx,encounter,state,time,camera); else drawWorld(ctx,state,time,camera,villageCompanion,rowanActor);
   const nearby=started&&!isPaused()?(homeActor?homeInteraction(homeActor):encounter?(encounter.hint()?{label:encounter.hint()}:null):nearest()):null;$('interact-hint').hidden=!nearby;if(nearby)$('interact-hint').querySelector('span').textContent=nearby.label;
   requestAnimationFrame(tick);
 }

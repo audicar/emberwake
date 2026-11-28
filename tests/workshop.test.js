@@ -22,6 +22,16 @@ test('the quiet final beat cannot be advanced immediately, but can be skipped',(
   const skipped=new WorkshopSequence(0);skipped.skip();assert.equal(skipped.finished,true);
   assert.equal(skipped.advance(),false);
 });
+test('finishing an animation keeps its moment on screen until a second press',()=>{
+  for(const step of WORKSHOP.order) {
+    const scene=new WorkshopSequence(step),shot=scene.beat.shot;
+    if(scene.ready){assert.equal(scene.finishMoment(),false);continue;}
+    assert.equal(scene.finishMoment(),true);assert.equal(scene.ready,true);
+    assert.equal(scene.beat.shot,shot);assert.equal(scene.finished,false);
+    assert.equal(scene.finishMoment(),false);assert.equal(scene.advance(),true);
+  }
+  const scene=new WorkshopSequence();scene.skip();assert.equal(scene.finishMoment(),false);
+});
 test('opening progress round-trips while existing saves do not replay it',()=>{
   for(let workshopStep=0;workshopStep<WORKSHOP.steps.length;workshopStep++) {
     const s=newState();s.workshopStep=workshopStep;

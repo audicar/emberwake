@@ -32,3 +32,12 @@ test('music starts on demand, pauses when hidden and avoids overdue note bursts'
     await music.toggle();assert.equal(music.enabled,false);
   } finally { music.stopTimer(); }
 });
+test('a refused audio resume stays off and can be retried',async()=>{
+  let refused=true;
+  const gain={value:0,setTargetAtTime(){}};
+  const context={currentTime:0,destination:{},resume:async()=>{if(refused)throw new Error('Gesture required');},
+    createGain:()=>({gain,connect(){}}),createBiquadFilter:()=>({frequency:{},connect(){}})};
+  const music=new BackgroundMusic(()=>context);music.startTimer=()=>{};
+  await assert.rejects(music.toggle(),/Gesture required/);assert.equal(music.enabled,false);assert.equal(music.timer,null);
+  refused=false;assert.equal(await music.toggle(),true);assert.equal(await music.toggle(),false);
+});

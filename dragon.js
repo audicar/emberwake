@@ -1,8 +1,8 @@
-export function drawDragon(c,x,y,{direction='down',green=false,scale=1,time=0,calm=true}={}) {
+export function drawDragon(c,x,y,{direction='down',green=false,river=false,scale=1,time=0,calm=true}={}) {
   c.save();c.translate(Math.round(x),Math.round(y));c.scale(scale,scale);
   if(direction==='left')c.scale(-1,1);
   const r=(x,y,w,h,colour)=>{c.fillStyle=colour;c.fillRect(x,y,w,h);};
-  const dark=green?'#34584b':'#84554c',body=green?'#7c9a72':'#d69c72',light=green?'#a9be87':'#efc894',wing=green?'#526f57':'#b57865';
+  const dark=river?'#3c6576':green?'#34584b':'#84554c',body=river?'#80b6ba':green?'#7c9a72':'#d69c72',light=river?'#d0dfc2':green?'#a9be87':'#efc894',wing=river?'#5d93a3':green?'#526f57':'#b57865';
   r(-9,0,18,2,'#183d3030');
   const bounce=Math.sin(time*5)>.5?-1:0;c.translate(0,bounce);
   r(-12,-7,8,5,dark);r(-15,-5,5,3,body);r(-16,-6,3,2,light);

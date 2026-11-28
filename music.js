@@ -49,9 +49,8 @@ export class BackgroundMusic {
   }
   async toggle() {
     this.ensureContext();
-    this.enabled=!this.enabled;
-    if(this.enabled){await this.context.resume();this.theme=this.pendingTheme;this.step=0;this.nextTime=this.context.currentTime+.04;this.startTimer();}
-    else this.stopTimer();
+    if(!this.enabled){await this.context.resume();this.enabled=true;this.theme=this.pendingTheme;this.step=0;this.nextTime=this.context.currentTime+.04;this.startTimer();}
+    else {this.enabled=false;this.stopTimer();}
     this.master.gain.setTargetAtTime(this.enabled?this.volume*.65:0,this.context.currentTime,.15);
     return this.enabled;
   }

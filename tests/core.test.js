@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newState, validateSave, tend, isGrown, awaken, objective, FLOWERS, PLOTS } from '../core.js';
-import { blocked } from '../art.js';
+import { blocked, riverX, VILLAGE_BRIDGE } from '../art.js';
 import { STYLES } from '../core.js';
 
 test('a full first chapter can be completed, saved and restored', () => {
@@ -75,4 +75,14 @@ test('every story interaction can be reached from spawn without crossing scenery
   for(const [name,x,y] of targets)assert.ok(queue.some(([qx,qy])=>Math.hypot(qx-x,qy-y)<25),`${name} must be reachable`);
   assert.equal(blocked(578,220),true,'river blocks movement away from the bridge');
   assert.equal(blocked(580,312),false,'the bridge can be crossed');
+});
+test('the bridge has forgiving approaches and grassy riverbanks stay walkable',()=>{
+  const b=VILLAGE_BRIDGE;
+  for(const y of [b.y+3,b.y+b.h-5])for(let x=b.x;x<=b.x+b.w;x++)assert.equal(blocked(x,y),false,'both edges of the visible deck can be crossed');
+  for(let y=294;y<=370;y++)assert.equal(blocked(596,y),false,'the east-bank return reaches the bridge without an invisible snag');
+  for(const y of [220,370,480]) {
+    const centre=riverX(Math.floor(y/4)*4);
+    assert.equal(blocked(centre+28,y),false,'grass beside the water is walkable');
+    assert.equal(blocked(centre+20,y),true,'water outside the bridge remains solid');
+  }
 });

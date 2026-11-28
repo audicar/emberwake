@@ -1,5 +1,5 @@
-import { drawCharacter } from './character.js?v=0.7.4';
-import { drawDragon } from './dragon.js?v=0.7.4';
+import { drawCharacter } from './character.js?v=0.8.0';
+import { drawDragon } from './dragon.js?v=0.8.0';
 
 export const HOME_ENTRY = { x: 416, y: 463 };
 export const HOME_START = { x: 445, y: 379 };
@@ -154,10 +154,28 @@ function roomBackground() {
   r(c,plant.x-5,plant.y-19,17,9,'#8faa76');r(c,plant.x+12,plant.y-30,17,9,'#a6bc8a');r(c,plant.x+3,plant.y-35,11,13,'#91ac79');
   return room;
 }
-export function drawHome(c,actor,state,time,camera) {
+export function drawHome(c,actor,state,time,camera,moment=null) {
   c.save();c.translate(-camera.x,-camera.y);c.drawImage(roomBackground(),0,0);
   drawKeepsakes(c,state);
   if(state.guardianFreed){r(c,470,433,45,26,'#b18e7b');r(c,473,436,39,20,'#cfb4a0');r(c,476,439,33,14,'#dfc9ad');}
-  if(state.dragonBonded)drawDragon(c,state.homecoming?492:actor.x-24,state.homecoming?450:actor.y+12,{direction:'down',time:time/1000});
+  const stage=state.chapter?.stage||0;
+  if(state.dragonBonded&&stage!==10) {
+    const tug=stage===1?Math.sin(time/450)*3:0;
+    drawDragon(c,state.homecoming?492+tug:actor.x-24,state.homecoming?450:actor.y+12,{direction:stage===1?'left':'down',time:time/1000});
+    if(stage===1){for(let i=0;i<13;i++)r(c,478+i,439+Math.round(Math.sin(i/3+time/450)),1,1,'#efdbc1');}
+  }
+  if(moment?.kind==='reunion') {
+    const t=moment.elapsed,walk=Math.max(0,Math.min(1,(t-.8)/3.2));
+    const x=416+walk*76,y=484-walk*34;
+    drawDragon(c,x,y,{direction:walk<1?'right':'down',time:time/1000});
+    if(walk<1){r(c,x-19,y-13,31,2,'#95704a');r(c,x+6,y-16,2,5,'#b18c5e');}
+    if(t>4) {
+      // Fold the lower pose beneath the body, keeping the established head and face.
+      c.save();c.beginPath();c.rect(actor.x-19,actor.y-35,38,32);c.clip();drawCharacter(c,actor.x,actor.y+6,state.appearance,'right',0);c.restore();
+      r(c,actor.x-4,actor.y-4,9,4,'#a28a6d');r(c,actor.x+3,actor.y-2,7,2,'#795b56');
+      c.restore();return;
+    }
+  }
+  if(stage===11){r(c,473,455,29,2,'#95704a');r(c,480,451,2,6,'#b18c5e');}
   drawCharacter(c,actor.x,actor.y,state.appearance,actor.direction,actor.walk||0);c.restore();
 }

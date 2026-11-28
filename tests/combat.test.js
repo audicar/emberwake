@@ -57,6 +57,16 @@ test('defeat returns home once and retains the save’s items and bond',()=>{
   for(let i=0;i<9;i++){e.player.invulnerable=0;e.hurt();}
   assert.equal(calls,1);assert.equal(e.player.hp,0);assert.equal(state.seeds,2);assert.equal(state.dragonBonded,true);
 });
+test('a guardian that moved during the fight is freed where it stands',()=>{
+  const state=newState();state.dragonBonded=true;let finish;
+  const e=new WoodlandEncounter(state,{say:(_speaker,_lines,done)=>{finish=done;}});
+  e.enemies.forEach(enemy=>enemy.hp=0);
+  Object.assign(e.guardian,{x:500,y:280});e.damageEnemy(e.guardian,8);
+  Object.assign(e.player,{x:500,y:310});
+  assert.equal(e.hint(),'Free the guardian');assert.equal(e.interact(),true);finish();
+  assert.equal(state.guardianFreed,true);assert.equal(e.hint(),'Talk to the guardian');
+  Object.assign(e.player,GUARDIAN);assert.equal(e.hint(),null,'the old nest is not an invisible interaction');
+});
 test('the hatchling, guardian and each bramble sprite are reachable from camp',()=>{
   const queue=[[288,500]],seen=new Set(['288,500']);
   for(let head=0;head<queue.length;head++){const [x,y]=queue[head];for(const [dx,dy] of [[4,0],[-4,0],[0,4],[0,-4]]){const nx=x+dx,ny=y+dy,key=`${nx},${ny}`;if(!seen.has(key)&&!woodsBlocked(nx,ny)){seen.add(key);queue.push([nx,ny]);}}}

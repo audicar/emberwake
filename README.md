@@ -8,20 +8,20 @@ A little life beside a sleeping dragon. A small, single-player browser game abou
 
 Make a home in a small village beneath a sleeping mountain. Grow a garden, get to know your neighbours, and explore paths where old stories are beginning to stir. Build a bond with dragons in a gentle fantasy adventure about kindness, belonging and finding your courage.
 
-This free, single-player prototype currently offers roughly ten minutes of play, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Your chosen character also appears in an animated opening with close-ups, dialogue and changing seasons. The cottage has optional personal interactions, and an early riverside invitation gives you time to meet a neighbour before choosing to garden. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
+This free, single-player prototype includes an opening chapter and a further woodland adventure, with time to wander. Create a character with 12 skin tones, 12 hairstyles, eight outfits and six accessories. Your chosen character also appears in an animated opening with close-ups, dialogue and changing seasons. The cottage has optional personal interactions, and an early riverside invitation gives you time to meet a neighbour before choosing to garden. A later outing adds a companion, new woodland paths, Dragon Blessings and a movement power used in combat and exploration. Change your name or appearance at any time. Relaxed village life sits alongside real-time action, with a journal that keeps one main quest in focus.
 
 ## Controls
 
 | Action | Control |
 | --- | --- |
-| Opening dialogue | E, Space, Enter or Continue; Escape to skip |
+| Opening dialogue | E, Space, Enter or Continue; first press finishes an animation, next press continues; Escape to skip |
 | Move | Arrow keys or WASD |
 | Talk, gather, plant, water, harvest | E, Space or Enter |
 | Inventory | I |
 | Journal | J |
 | Village map | M |
 | Blade attack | Left mouse button or Z (hold either to repeat) |
-| Dodge | Right mouse button or X |
+| Dodge / Riverstep once awakened | Right mouse button or X |
 | Dragon command | C |
 | Menu / close / leave a conversation | Escape |
 | Touch devices | On-screen direction pad and E button |
@@ -50,11 +50,11 @@ npm test
 
 ## Saves and privacy
 
-Progress is automatically saved in `localStorage` after interactions, every ten seconds during play, and when leaving the page. Saves are local to a browser profile and origin. Clearing site data, switching devices or using a different web address will not carry a save across. Private browsing may discard it on exit; browser restrictions may prevent storage entirely. Reloading inside the cottage keeps you indoors. Expeditions restart from the village after a page reload; permanent story progress and collected equipment remain saved. Encounters reset on a new visit until their story is complete. Returning home restores your health. Defeat brings you home with your items intact.
+Progress is automatically saved in `localStorage` after interactions, every ten seconds during play, and when leaving the page. Saves are local to a browser profile and origin. Clearing site data, switching devices or using a different web address will not carry a save across. Private browsing may discard it on exit; browser restrictions may prevent storage entirely. Reloading inside the cottage keeps you indoors. The first woodland expedition restarts from the village after a page reload; permanent story progress and collected equipment remain saved. That encounter resets on a new visit until its story is complete. The lower-valley chapter preserves clues, cleared creatures, broken bindings and your route across reloads; retreating or being helped home keeps that progress. Returning home restores your health. Defeat brings you home with your items intact.
 
 The menu reports storage errors and provides save download and import without needing an account. Import validates the file before replacing progress, and asks before replacing the current story.
 
-There are no analytics, network game services, external fonts or downloaded art assets. All scenery and sprites are drawn in Canvas. Original background music is synthesised in the browser, with different themes for village life and exploration. Enable it with the Music button and adjust its volume in the menu. Music pauses when the tab is hidden; no audio is downloaded.
+There are no analytics, network game services, external fonts or downloaded art assets. All scenery and sprites are drawn in Canvas. Original background music is synthesised in the browser, with different themes for village life and exploration. Enable it with the Music button and adjust its volume in the menu. Your music preference and volume are remembered; after a reload, music resumes on your first key press or click. Music pauses when the tab is hidden; no audio is downloaded.
 
 ## Hosting
 
@@ -63,6 +63,8 @@ The repository is a static site published from `main` at the repository root, wi
 ## Source layout
 
 - `core.js`: serialisable game state, save validation and garden/story rules.
+- `chapter.js`, `chapter-art.js`: lower-valley progression, exploration, companion movement and scenery.
+- `tests/chapter.test.js`: chapter progression, saved discoveries, encounter rules and route accessibility.
 - `art.js`: original procedural pixel scenery and collision geometry.
 - `character.js`: layered character sprites, body silhouettes, hair, garments and accessories.
 - `cast.js`: shared villager appearances and dialogue portraits.

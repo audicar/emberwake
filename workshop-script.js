@@ -62,6 +62,11 @@ export class WorkshopSequence {
   get isLast() { return this.step===WORKSHOP.order.at(-1); }
   get ready() { return !this.finished&&this.elapsed>=(this.beat.minSeconds||0); }
   update(dt) { if(Number.isFinite(dt)&&dt>0&&!this.finished)this.elapsed+=dt; }
+  finishMoment() {
+    if(this.finished||this.ready)return false;
+    this.elapsed=this.beat.minSeconds||0;
+    return true;
+  }
   advance() {
     if(!this.ready)return false;
     if(this.isLast)this.finished=true;

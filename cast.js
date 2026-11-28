@@ -1,4 +1,5 @@
-import { drawCharacter } from './character.js?v=0.7.4';
+import { drawCharacter } from './character.js?v=0.8.0';
+import { drawDragon } from './dragon.js?v=0.8.0';
 
 // World sprites and dialogue close-ups share one appearance for each speaker.
 export const CAST = {
@@ -11,6 +12,8 @@ export const CAST = {
     appearance: { skin: 3, hair: 3, colour: 3, hairStyle: 6, outfit: 4, accessory: 4, gender: 0 },
   },
   guardian: { name: 'Briarwood’s guardian', label: 'Briarwood’s guardian' },
+  riverDragon: { name: 'the river dragon', label: 'The river dragon', portrait:'river' },
+  hatchling: { name: 'your hatchling', label: 'Your hatchling', portrait:'hatchling' },
   dragon: { name: 'the dreamer', label: 'The dream beneath the hill' },
   unknown: { name: 'an unknown speaker', label: 'An unfamiliar voice', portrait: 'mystery' },
 };
@@ -33,6 +36,8 @@ export function drawSpeakerPortrait(canvas, id) {
   if (person.appearance) {
     // Crop at the shoulders; keep the full face, hair and headwear in frame.
     drawCharacter(c, 42, 134, person.appearance, 'down', 0, 3);
+  } else if(person.portrait==='river'||person.portrait==='hatchling') {
+    drawDragon(c,42,103,{river:person.portrait==='river',scale:2.8,time:0});
   } else if (person.portrait === 'mystery') {
     // A shared placeholder for voices whose identity and location are unknown.
     // Abstract mist avoids suggesting a person, creature or physical source.

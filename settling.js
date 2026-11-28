@@ -14,7 +14,7 @@ export const ROWAN_SPOTS = {
   river:{x:520,y:358,direction:'right'},
   garden:{x:236,y:311,direction:'down'},
 };
-export function rowanPlace(state) { return !state.metRowan?'cottage':!state.receivedSeeds?'river':'garden'; }
+export function rowanPlace(state) { const stage=state.chapter?.stage||0;return stage===2||stage===10?'cottage':stage>=3&&stage<10?'river':!state.metRowan?'cottage':!state.receivedSeeds?'river':'garden'; }
 export function rowanPosition(state) { return ROWAN_SPOTS[rowanPlace(state)]; }
 export function createRowanActor(state) { return {...rowanPosition(state),place:rowanPlace(state),route:[],walk:0,arrived:true}; }
 export function updateRowan(actor,state,dt,isBlocked) {
@@ -22,7 +22,7 @@ export function updateRowan(actor,state,dt,isBlocked) {
   if(actor.place!==place) {
     actor.place=place;actor.arrived=false;
     actor.route=(place==='river'?[{x:272,y:278},{x:286,y:310},{x:490,y:310},{x:490,y:358},ROWAN_SPOTS.river]:
-      place==='garden'?[{x:490,y:358},{x:490,y:310},{x:286,y:310},ROWAN_SPOTS.garden]:[ROWAN_SPOTS.cottage]).map(p=>({...p}));
+      place==='garden'?[{x:490,y:358},{x:490,y:310},{x:286,y:310},ROWAN_SPOTS.garden]:actor.x>400?[{x:490,y:358},{x:490,y:310},{x:286,y:310},{x:272,y:278},ROWAN_SPOTS.cottage]:[ROWAN_SPOTS.cottage]).map(p=>({...p}));
   }
   const target=actor.route[0];
   if(!target){actor.walk=0;actor.arrived=true;actor.direction=ROWAN_SPOTS[place].direction;return;}

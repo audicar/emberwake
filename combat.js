@@ -50,7 +50,7 @@ export class WoodlandEncounter {
   }
   hint() {
     if(!this.state.dragonBonded&&distance(this.player,HATCHLING)<38)return 'Help the hatchling';
-    if(this.guardian.hp<=0&&distance(this.player,GUARDIAN)<55)return this.state.guardianFreed?'Talk to the guardian':'Free the guardian';
+    if(this.guardian.hp<=0&&distance(this.player,this.guardian)<55)return this.state.guardianFreed?'Talk to the guardian':'Free the guardian';
     if(distance(this.player,TRAIL)<36)return 'Return to Hearthvale';
     return null;
   }
@@ -60,15 +60,17 @@ export class WoodlandEncounter {
       this.events.say('A wayward hatchling',[
         'A little dragon has caught its wing beneath a fallen branch. You lift the wood and sit back. After a long moment, it edges forward and presses its warm forehead into your hand.',
         'It follows when you stand, then stops whenever you look back. On the third try, you hold out your hand. This time it stays beside you.',
+        'A little warmth remains in your palm after it moves away. Your first Dragon Blessing. You do not yet know why you can feel it so clearly.',
         'The hatchling will follow you. Press C to call its ember breath in a fight. Left-click or Z swings your blade; right-click or X dodges an incoming attack.',
-      ],()=>{this.state.dragonBonded=true;this.companion={x:this.player.x-18,y:this.player.y+10,direction:'up'};this.events.changed();this.events.toast('A first bond · Your hatchling is ready to help.');});
+      ],()=>{this.state.dragonBonded=true;this.companion={x:this.player.x-18,y:this.player.y+10,direction:'up'};this.events.changed();this.events.toast('Dragon Blessings · 1. Your hatchling is ready to help.');});
       return true;
     }
     if(hint==='Free the guardian') {
       this.events.say('guardian',[
         'The dark band around the dragon’s neck crumbles. It lowers its head. Your hatchling steps forward, very bravely, and touches its nose.',
-        'Someone taught these thorns to bind us, says a voice in your thoughts. The hatchling checks that you are still beside it. It has chosen well, the guardian says. Take it home, Emberkeeper.',
-      ],()=>{this.state.guardianFreed=true;this.events.changed();this.events.toast('The guardian is free · Briarwood welcomes you.');});return true;
+        'Someone taught these thorns to bind us, says a voice in your thoughts. The hatchling checks that you are still beside it. It has chosen well, the guardian says. Take it home, little ember.',
+        'The guardian bows its head to you. A second warmth settles beside the first. Two Dragon Blessings, both still bright.',
+      ],()=>{this.state.guardianFreed=true;this.events.changed();this.events.toast('Dragon Blessings · 2. The guardian is free.');});return true;
     }
     if(hint==='Talk to the guardian'){this.events.say('guardian',['The trees remember kindness. So will I. Take good care of your little friend.']);return true;}
     if(hint==='Return to Hearthvale'){this.events.say('The path home',['Warm tea and your own garden are waiting. Head back to Hearthvale?'],()=>this.leave(false),'Head home');return true;}

@@ -1,11 +1,12 @@
-import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.7.4';
-import { drawCharacter } from './character.js?v=0.7.4';
-export { drawCharacter } from './character.js?v=0.7.4';
-import { CAST } from './cast.js?v=0.7.4';
-import { drawDragon } from './dragon.js?v=0.7.4';
-import { rowanPosition } from './settling.js?v=0.7.4';
+import { FLOWERS, PLOTS, isGrown } from './core.js?v=0.8.0';
+import { drawCharacter } from './character.js?v=0.8.0';
+export { drawCharacter } from './character.js?v=0.8.0';
+import { CAST } from './cast.js?v=0.8.0';
+import { drawDragon } from './dragon.js?v=0.8.0';
+import { rowanPosition } from './settling.js?v=0.8.0';
 export { tree as drawTree };
 export const WORLD = { width: 832, height: 576 };
+export const VILLAGE_BRIDGE = { x: 540, y: 292, w: 91, h: 51 };
 export const BUILDINGS = [{ x: 112, y: 144, w: 96, h: 80, name: 'Your cottage', roof: '#ad6a52' }, { x: 320, y: 112, w: 96, h: 80, name: 'Mira’s stitches', roof: '#67778a' }, { x: 112, y: 352, w: 64, h: 64, name: 'The potting shed', roof: '#a77f4f' }];
 const trees = [];
 const hash = (x, y) => { let n = Math.imul(x + 37, 374761393) + Math.imul(y + 61, 668265263); n = Math.imul(n ^ n >>> 13, 1274126177); return (n ^ n >>> 16) >>> 0; };
@@ -15,9 +16,12 @@ for (let y = 100; y < 550; y += 40) for (let x = 20; x < 820; x += 36) {
 }
 trees.push({ x: 497, y: 151, size: 1.3 }, { x: 110, y: 288, size: 1.2 }, { x: 370, y: 430, size: 1.15 }, { x: 519, y: 334, size: 1.1 }, { x: 673, y: 445, size: 1.2 }, { x: 766, y: 250, size: 1.1 });
 export function riverX(y) { return 578 + Math.floor(Math.sin(y / 90) * 13); }
-export function blocked(x, y) {
+export function blocked(x, y, riverstep=false) {
   if (x < 22 || x > 810 || y < 120 || y > 545) return true;
-  if (Math.abs(x - riverX(y)) < 30 && !(y > 299 && y < 326)) return true;
+  const bridge=VILLAGE_BRIDGE;
+  const onDeck=x>=bridge.x&&x<=bridge.x+bridge.w&&y>=bridge.y+2&&y<=bridge.y+bridge.h-4;
+  // Match the painted water, leaving the grassy bank free to walk on.
+  if (!riverstep&&Math.abs(x - riverX(Math.floor(y/4)*4)) < 26 && !onDeck) return true;
   if (BUILDINGS.some(b => x > b.x - 5 && x < b.x + b.w + 5 && y > b.y + 20 && y < b.y + b.h + 2)) return true;
   if (trees.some(t => Math.abs(x - t.x) < 10 && Math.abs(y - t.y) < 7)) return true;
   // The shrine and well have physical bases, but are approachable from every side.
@@ -80,6 +84,7 @@ export function drawWorld(c, s, time, camera, companion = null, rowan = null, {s
     for(let i=0;i<9;i++){const px=bx+hash(bx+i,by)%24-12,py=by+hash(bx,by+i)%16-8;flowers(c,px,py,i%3===0?'#eed9c5':i%3===1?'#d7acc0':'#e8c998');}
   }
   path(278,436,24,98);
+  if(s.chapter?.stage>=4&&s.chapter.stage<11){path(478,448,24,45);rect(c,487,466,3,22,'#806e50');rect(c,477,458,27,12,'#d1bd8c');rect(c,482,462,16,2,'#6f7653');}
   rect(c,312,490,3,22,'#806e50');rect(c,302,482,25,12,'#c9b487');rect(c,307,486,15,2,'#7c7654');
   if(!s.awakened){for(let i=0;i<4;i++){rect(c,277+i*7,501-i%2*3,4,17,'#54734c');rect(c,274+i*7,505-i%2*3,9,4,'#839d68');}}
   ellipse(c,452,215,15,9,'#b0b98a');
@@ -89,7 +94,14 @@ export function drawWorld(c, s, time, camera, companion = null, rowan = null, {s
   for(let i=0;i<3;i++){const p=PLOTS[i];rect(c,p.x-9,p.y-5,19,18,'#6c5037');rect(c,p.x-8,p.y-3,17,2,'#8c6948');rect(c,p.x-8,p.y+4,17,2,'#8c6948');if(s.plots[i]){if(s.plots[i].watered)rect(c,p.x-8,p.y+9,17,3,'#534b35');if(isGrown(s,i)){rect(c,p.x-2,p.y-9,5,13,'#d5d4af');rect(c,p.x-5,p.y-10,5,4,'#65935c');rect(c,p.x+1,p.y-13,5,4,'#9dbb73');rect(c,p.x-2,p.y-7,5,3,'#ecdebe');}else{rect(c,p.x,p.y-2,2,7,'#527d4a');rect(c,p.x-3,p.y-3,4,3,'#b0bf77');rect(c,p.x+1,p.y-5,4,3,'#95b56a');}}}
   // River banks, gently moving reflections and a wooden bridge.
   for(let y=100;y<576;y+=4){const rx=riverX(y);rect(c,rx-32,y,64,4,'#87a47c');rect(c,rx-26,y,52,4,'#5a8e92');rect(c,rx-21,y,42,4,'#83b1ad');rect(c,rx-23,y,3,4,'#b8bc89');if(hash(y,1)%3===0){const offset=Math.floor(time/700+y/8)%25;rect(c,rx-16+offset,y,11,1,'#c0d9c6');}}
-  rect(c,540,298,91,31,'#614f3a');for(let x=541;x<631;x+=7){rect(c,x,300,6,27,'#c2a274');rect(c,x+1,301,4,2,'#ddbd87');}rect(c,537,296,98,3,'#a7875c');rect(c,537,325,98,3,'#8e704f');for(const x of [540,628]){rect(c,x,289,4,12,'#d6b884');rect(c,x,318,4,13,'#d6b884');}
+  const bridge=VILLAGE_BRIDGE;
+  path(bridge.x-15,bridge.y+2,19,bridge.h-4);path(bridge.x+bridge.w-1,bridge.y+2,24,bridge.h-4);
+  // A broad landing on either bank keeps the return route easy to read.
+  path(640,bridge.y+4,19,68);
+  rect(c,bridge.x,bridge.y,bridge.w,bridge.h,'#614f3a');
+  for(let x=bridge.x+1;x<bridge.x+bridge.w;x+=7){rect(c,x,bridge.y+2,6,bridge.h-4,'#c2a274');rect(c,x+1,bridge.y+3,4,2,'#ddbd87');}
+  rect(c,bridge.x-3,bridge.y-2,bridge.w+7,3,'#a7875c');rect(c,bridge.x-3,bridge.y+bridge.h-3,bridge.w+7,3,'#8e704f');
+  for(const x of [bridge.x,bridge.x+bridge.w-3]){rect(c,x,bridge.y-9,4,12,'#d6b884');rect(c,x,bridge.y+bridge.h-11,4,13,'#d6b884');}
   // Shrine: a mossed stone doorway and a little offering bowl.
   rect(c,686,179,67,8,'#b3b59a');rect(c,694,173,51,6,'#d2ceb1');rect(c,702,139,9,35,'#929d87');rect(c,730,139,9,35,'#929d87');rect(c,701,135,39,8,'#bbc1a5');rect(c,707,128,27,7,'#a6b399');rect(c,713,123,15,5,'#ced0ae');rect(c,714,148,13,20,s.awakened?'#e3b976':'#5b7970');rect(c,718,153,5,10,s.awakened?'#fff0b3':'#b0ba8c');rect(c,698,169,10,4,'#6c8b60');rect(c,732,136,8,4,'#799366');rect(c,711,185,20,4,'#7d8371');rect(c,713,182,16,4,'#bac1a2');
   // A small dragon-like silhouette in the ridge, increasingly visible after the offering.
@@ -101,10 +113,11 @@ export function drawWorld(c, s, time, camera, companion = null, rowan = null, {s
   for(const [x,y] of [[100,235],[212,231]]){rect(c,x,y,8,8,'#ac8061');rect(c,x-2,y-4,12,7,'#5b824d');flowers(c,x+4,y-2,'#dbb28f');}
   for(const [x,y] of [[192,389],[202,396]]){rect(c,x,y,10,10,'#a88d62');rect(c,x+2,y+2,6,6,'#94774f');rect(c,x+4,y,2,10,'#bea071');}
   for(const f of FLOWERS)if(!s.flowers.includes(f.id)){rect(c,f.x-4,f.y-5,9,1,'#f8e6ae');rect(c,f.x,f.y-9,1,9,'#f8e6ae');flowers(c,f.x,f.y,'#eee0a3');rect(c,f.x-4,f.y-4,2,2,'#eee0a3');rect(c,f.x+3,f.y-4,2,2,'#eee0a3');if(Math.sin(time/450+f.x)>0.7)rect(c,f.x+5,f.y-12,1,2,'#fff0bd');}
+  const hatchlingVisible=s.chapter?.stage!==10;
   const rowanHere={...CAST.rowan,...(rowan||rowanPosition(s))};
-  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[...(showRowan?[rowanHere]:[]),CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance,person.direction||'down',person.walk||0)})),...(s.dragonBonded?[{y:(companion?.y??s.y+12),draw:()=>drawDragon(c,companion?.x??s.x-18,companion?.y??s.y+12,{direction:s.direction,time:time/1000})}]:[]),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
+  const sprites=[...trees.map(t=>({y:t.y,draw:()=>tree(c,t)})),...BUILDINGS.map(b=>({y:b.y+b.h,draw:()=>house(c,b)})),...[...(showRowan?[rowanHere]:[]),CAST.mira].map(person=>({y:person.y,draw:()=>drawCharacter(c,person.x,person.y,person.appearance,person.direction||'down',person.walk||0)})),...(s.dragonBonded&&hatchlingVisible?[{y:(companion?.y??s.y+12),draw:()=>drawDragon(c,companion?.x??s.x-18,companion?.y??s.y+12,{direction:s.direction,time:time/1000})}]:[]),{y:s.y,draw:()=>drawCharacter(c,s.x,s.y,s.appearance,s.direction,s.walk||0)}];
   sprites.sort((a,b)=>a.y-b.y).forEach(spr=>spr.draw());
-  if(showRowan&&s.metRowan&&!s.receivedSeeds&&(!rowan||rowan.arrived)) {
+  if(showRowan&&((s.metRowan&&!s.receivedSeeds)||s.chapter?.stage===3)&&(!rowan||rowan.arrived)) {
     // His own fishing spot, with the float in the water on the right.
     for(let i=0;i<13;i++)rect(c,rowanHere.x+5+i*2,rowanHere.y-18-i,2,1,'#8c7351');
     rect(c,rowanHere.x+30,rowanHere.y-30,1,27,'#d2cfac');rect(c,rowanHere.x+28,rowanHere.y-3,5,2,'#d6ac7b');

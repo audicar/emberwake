@@ -14,7 +14,7 @@ test('the main story exposes one consequential quest at a time',()=>{
   s.flowers=['f1','f2','f3'];assert.equal(current(),'awakened');
   assert.equal(awaken(s),true);assert.equal(current(),'dragonBonded');
   s.dragonBonded=true;assert.equal(current(),'guardianFreed');
-  s.guardianFreed=true;assert.equal(current(),'homecoming');s.homecoming=true;assert.equal(current(),null);assert.equal(completedMainQuests(s).length,8);
+  s.guardianFreed=true;assert.equal(current(),'homecoming');s.homecoming=true;assert.equal(current(),'morningWater');assert.equal(completedMainQuests(s).length,8);
 });
 test('older out-of-order progress does not expose multiple active story quests',()=>{
   const s=newState();s.dragonBonded=true;s.guardianFreed=true;

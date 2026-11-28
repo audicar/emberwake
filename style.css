@@ -302,8 +302,15 @@
 .workshop-journey .workshop-stage { background: #233d36; }
 .workshop-journey #workshop-text { max-width: 700px; }
 
+.cottage-reunion #dialogue { top: 18px; bottom: auto; max-height: 46%; }
+.cottage-reunion #place-label, .cottage-reunion #task-hint, .cottage-reunion #toast { visibility: hidden; }
 .dialogue-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
 #dialogue .dialogue-actions button { margin: 0; border: 1px solid #a5b48a88; padding: 10px 12px; min-height: 44px; line-height: 1.5; }
 #dialogue-cancel { color: var(--muted); font-size: 11px; }
 
 #combat-hud > div:last-child { display: grid; gap: 6px; }
+
+#blessings-hud {position:absolute;left:32px;top:124px;padding:8px 12px;background:#1c302bdc;border:1px solid #b9b88a66;font-size:12px;color:#f0d8a7;z-index:2}
+.blessing-notes {padding:14px 18px;background:#314b40;border:1px solid #9eb18a66;margin:16px 0}.blessing-notes h3{margin:0 0 8px;color:#e7c58c}.blessing-notes p,.clue-note{font:16px/1.6 Georgia,serif}.blessing-notes p{color:#efe6cc;margin:0}.clue-note{padding-left:14px;border-left:2px solid #9eb18a66}
+@media(max-width:680px){#blessings-hud{left:16px;top:85px;font-size:10px;padding:7px 9px}}
+.has-riverstep .touch-combat{display:flex}.has-riverstep:not(.in-woods) .touch-combat button:not([data-combat="x"]){display:none}
